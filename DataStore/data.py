@@ -15,12 +15,10 @@ import os
 class Data:
 
 
-    #'../DataStore/etfs.db'
     conn_obj = sql.connect(os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore/etfs.db'),\
                            check_same_thread=False)
     log_obj = Logs()
     tiingo_config_obj = TiingoConfig(os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/Config/config_platform.json'))
-    #TiingoConfig('../Config/config_platform.json')
     universe_ls = ['SHY','TLT','VTI','IWN','GLD','BNDX','LQD','VEU','VNQ','SPY','TIP','DBC',\
         'EFA','EEM','BIL','IEF','DLS','AGG','IWD','IWM','EFV','SCZ','HYG','JPST']
 
@@ -29,11 +27,12 @@ class Data:
         self.startDate = self.startDate.strftime(format='%Y-%m-%d')
         self.endDate = datetime.today().strftime(format='%Y-%m-%d')
 
-    def simulation(self,columns_ls=universe_ls):
+    def simulation(self,columns_ls=universe_ls,freq='M'):
         index_ls = pd.date_range(start=self.startDate, end=self.endDate)
         simulation_df = pd.DataFrame(columns=columns_ls,\
                                      index=index_ls,\
                                      data=np.random.normal(loc=100,size=(len(index_ls),len(columns_ls))))
+        simulation_df = simulation_df.resample(freq).agg('last')
         return simulation_df
 
     def wait_between_query(func):
@@ -101,11 +100,19 @@ class Data:
         self.logger_obj.log_msg(msg)
         return historical_data_df
 
+    #def write_query_allocation(self):
+    #    return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\";'
+
     def write_query_allocation(self):
-        return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\";'
+        return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\" AND name NOT LIKE \"%_returns\";'
 
     def write_query_equity_curves(self,allocation='buy_and_hold'):
         query = f'SELECT * FROM \"{allocation}\";'
+        return query
+
+    def write_query_returns(self,allocation='buy_and_hold'):
+        table = '_'.join((allocation,'returns'))
+        query = f'SELECT * FROM \"{table}\";'
         return query
 
     def query(self,query,melt=False):
@@ -121,9 +128,12 @@ class Data:
 if __name__ == '__main__':
     data_obj = Data()
     #query = data_obj.write_query_equity_curves()
-    #df = data_obj.query(query=query)
-    allocation_query = data_obj.write_query_allocation()
-    allocation_ls = data_obj.query(query=allocation_query).name.tolist()
+    query = data_obj.write_query_returns()
+    pdb.set_trace()
+    df = data_obj.query(query=query)
+    #df = data_obj.simulation()
+    #allocation_query = data_obj.write_query_allocation()
+    #allocation_ls = data_obj.query(query=allocation_query).name.tolist()
     data_obj.close()
 
     #data_obj.insert_historical_data()

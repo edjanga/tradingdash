@@ -366,10 +366,10 @@ class PortfolioStrategies:
         if 'performance' in table:
             print(f'[INSERTION]: {type(object).__name__} performance has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
 
-# class Backtest:
-#
-#     @staticmethod
-#     def performance(df):
+        if 'returns' in table:
+            print(
+                f'[INSERTION]: {type(object).__name__} returns has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+
 
 
 if __name__ == '__main__':
@@ -379,6 +379,8 @@ if __name__ == '__main__':
     portfolio_strat_obj = PortfolioStrategies(buy_and_hold_obj,df)
     equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
     equity_curves_df['average'] = equity_curves_df.sum(axis=1)/equity_curves_df.shape[1]
-    portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj)
+    portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj,table='buy_and_hold')
+    equity_curves_df = equity_curves_df-1
+    portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj,table='buy_and_hold_returns')
 
 
