@@ -2,3 +2,5 @@
 .idea
 Config/*.json
 venv
+DataStore/*.db
+*/log.txt
