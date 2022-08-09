@@ -5,6 +5,7 @@ import concurrent.futures
 from DataStore import Data
 import inspect
 from Logger import Logs
+from scipy.stats import skew,kurtosis
 import pdb
 
 class Performance:
@@ -22,6 +23,40 @@ class Performance:
     @staticmethod
     def annualised_vol(df,freq='monthly'):
         return pd.DataFrame(ep.annual_volatility(df,period=freq),index=df.columns)
+
+    @staticmethod
+    def annualised_cagr(df,freq='monthly'):
+        return pd.DataFrame(ep.cagr(df,period=freq),index=df.columns)
+
+    @staticmethod
+    def cvar(df):
+        cvar_ls = list(map(lambda x:ep.conditional_value_at_risk(x),df.transpose().values))
+        return pd.DataFrame(cvar_ls,index=df.columns)
+
+    @staticmethod
+    def annualised_calmar_ratio(df,freq='monthly'):
+        calmar_ratio_ls = list(map(lambda x:ep.calmar_ratio(x,period=freq),df.transpose().values))
+        return pd.DataFrame(calmar_ratio_ls,index=df.columns)
+
+    @staticmethod
+    def maxdrawdon(df):
+        maxdrawdowns_ls = list(map(lambda x: ep.max_drawdown(x),df.transpose().values))
+        return pd.DataFrame(maxdrawdowns_ls,index=df.columns)
+
+    @staticmethod
+    def skew(df):
+        skew_ls = list(map(lambda x: skew(x),df.transpose().values))
+        return pd.DataFrame(skew_ls,index=df.columns)
+
+    @staticmethod
+    def kurtosis(df):
+        kurtosis_ls = list(map(lambda x: skew(x), df.transpose().values))
+        return pd.DataFrame(kurtosis_ls, index=df.columns)
+
+    @staticmethod
+    def tail_ratio(df):
+        tail_ratio_ls = list(map(lambda x: ep.tail_ratio(x), df.transpose().values))
+        return pd.DataFrame(tail_ratio_ls, index=df.columns)
 
 class Table(object):
 
@@ -64,3 +99,4 @@ if __name__ == '__main__':
     df.index.name = 'time'
     table_obj = Table(perf_obj, df)
     aggregate_perf_df = table_obj.table_aggregate()
+    print(aggregate_perf_df)
