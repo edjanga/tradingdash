@@ -5,8 +5,11 @@ import concurrent.futures
 import pdb
 from Logger import Logs
 import numpy as np
+from datetime import datetime
+import empyrical as ep
 
 
+data_obj = Data()
 
 def returns(df):
     return df.pct_change()
@@ -20,7 +23,11 @@ def equity_curve(returns_df,weights_df):
     weights_df = weights_df.shift()
     equity_curve_df = pd.DataFrame((weights_df.mul(returns_df).sum(axis=1)+1).cumprod())
     return equity_curve_df
-
+"""
+    The following strategies were coded up according to @WifeyAlpha instructions.
+    However, cash instrument has been replaced by JPST instead of BIL (BIL was used as cash money market
+    instrument and bonds at the same time in certain strategies.
+"""
 class BuyAndHold:
 
     @staticmethod
@@ -347,13 +354,31 @@ class PortfolioStrategies:
         equity_curves_df = pd.concat(equity_curves_dd,axis=1).droplevel(1,1)
         return equity_curves_df
 
+    @staticmethod
+    def insertion(df,object,table):
+        """
+            Insertion of strategies catalog to database
+        """
+        df.to_sql(name=table,con=data_obj.conn_obj,if_exists='replace')
+        if table in['buy_and_hold','tactical_allocation']:
+            print(f'[INSERTION]: {type(object).__name__} strategies catalog has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+
+        if 'performance' in table:
+            print(f'[INSERTION]: {type(object).__name__} performance has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+
+# class Backtest:
+#
+#     @staticmethod
+#     def performance(df):
+
+
 if __name__ == '__main__':
-    data_obj = Data()
+
     df = data_obj.simulation(data_obj.universe_ls)
     buy_and_hold_obj = BuyAndHold()
     portfolio_strat_obj = PortfolioStrategies(buy_and_hold_obj,df)
     equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
     equity_curves_df['average'] = equity_curves_df.sum(axis=1)/equity_curves_df.shape[1]
-    print(equity_curves_df.head())
+    portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj)
 
 

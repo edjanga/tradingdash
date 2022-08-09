@@ -1,5 +1,6 @@
 import json
 import pdb
+import os
 
 
 class BaseConfig(object):
@@ -43,4 +44,3 @@ class TiingoConfig(PlatformConfig):
 
 if __name__ == '__main__':
     tiigo_config_obj = TiingoConfig()
-    print(tiigo.api)
