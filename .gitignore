@@ -4,3 +4,4 @@ Config/*.json
 venv
 DataStore/*.db
 */log.txt
+*/__pycache__/*
