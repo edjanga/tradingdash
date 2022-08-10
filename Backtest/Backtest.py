@@ -58,13 +58,13 @@ class Performance:
         tail_ratio_ls = list(map(lambda x: ep.tail_ratio(x), df.transpose().values))
         return pd.DataFrame(tail_ratio_ls, index=df.columns)
 
-class Table(object):
+class Table(Performance):
 
     log_obj = Logs()
 
-    def __init__(self,object,df):
+    def __init__(self,df):
         self.df = df
-        methods_ls = inspect.getmembers(object,predicate=inspect.isfunction)
+        methods_ls = inspect.getmembers(Performance,predicate=inspect.isfunction)
         self.metric_name = [method[-1] for method in methods_ls]
 
     def table_aggregate(self):
@@ -97,6 +97,6 @@ if __name__ == '__main__':
     query = data_obj.write_query_returns(allocation)
     df = data_obj.query(query).set_index('index')
     df.index.name = 'time'
-    table_obj = Table(perf_obj, df)
+    table_obj = Table(df)
     aggregate_perf_df = table_obj.table_aggregate()
     print(aggregate_perf_df)

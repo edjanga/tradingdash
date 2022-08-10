@@ -104,7 +104,7 @@ class Data:
     #    return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\";'
 
     def write_query_allocation(self):
-        return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\" AND name NOT LIKE \"%_returns\";'
+        return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\" AND name NOT LIKE \"%_returns\" AND name NOT LIKE \"%_performance\";'
 
     def write_query_equity_curves(self,allocation='buy_and_hold'):
         query = f'SELECT * FROM \"{allocation}\";'
@@ -115,10 +115,20 @@ class Data:
         query = f'SELECT * FROM \"{table}\";'
         return query
 
-    def query(self,query,melt=False):
+    def write_query_performance(self,allocation='buy_and_hold'):
+        table = '_'.join((allocation,'performance'))
+        query = f'SELECT * FROM \"{table}\";'
+        return query
+
+    #def write_query_risk_free_instrument(self):
+    #    query =
+
+    def query(self,query,melt=False,set_index=False):
         df = pd.read_sql(sql=query,con=Data.conn_obj)
         if melt:
             df = pd.melt(df,id_vars='index',var_name='strategy',value_name='equity_curve')
+        if set_index:
+            df = df.set_index('index')
         return df
 
     def close(self):

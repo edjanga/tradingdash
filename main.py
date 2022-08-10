@@ -8,6 +8,7 @@ import pandas as pd
 app = Dash(__name__)
 data_obj = Data()
 
+
 allocation_query = data_obj.write_query_allocation()
 allocation_ls = data_obj.query(query=allocation_query).name.tolist()
 
@@ -37,6 +38,13 @@ def strategies_dropdown(allocation):
                                             y='returns',color='strategy',labels={'x':'frequency'},marginal='violin')
     content_ls.append(html.Br())
     content_ls.append(dcc.Graph(figure=distribution_returns_fig))
+    query = data_obj.write_query_performance(allocation=allocation)
+    perf_df = data_obj.query(query).rename(columns={'index':'strategy'})
+    perf_fig = go.Figure(data=[go.Table( \
+        header=dict(values=list(perf_df.columns), align='left'), \
+        cells=dict(values=perf_df.transpose().values, align='left'))])
+    perf_fig.update_layout(margin={'t': 30, 'b': 10},height=500)
+    content_ls.append(dcc.Graph(figure=perf_fig))
     #pdb.set_trace()
     return content_ls
 

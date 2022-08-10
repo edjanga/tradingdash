@@ -6,13 +6,15 @@ import pdb
 from Logger import Logs
 import numpy as np
 from datetime import datetime
+from Backtest import Table
 import empyrical as ep
 
 
 data_obj = Data()
 
-def returns(df):
-    return df.pct_change()
+def returns(df,adjusted=False):
+    if not adjusted:
+        return np.log(df/df.shift())#pct_change()
 
 def weights(weights_ls,returns_df):
     weights_ls = [weights_ls * returns_df.shape[0]]
@@ -382,5 +384,10 @@ if __name__ == '__main__':
     portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj,table='buy_and_hold')
     equity_curves_df = equity_curves_df-1
     portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj,table='buy_and_hold_returns')
+    query = data_obj.write_query_returns()
+    returns_df = data_obj.query(query,set_index=True)
+    perf_obj = Table(returns_df)
+    perf_df = perf_obj.table_aggregate()
+    portfolio_strat_obj.insertion(perf_df,buy_and_hold_obj,table='buy_and_hold_performance')
 
 
