@@ -7,6 +7,8 @@ from Logger import Logs
 import numpy as np
 from datetime import datetime
 from Backtest import Table
+import pickle
+import os
 import empyrical as ep
 
 
@@ -372,6 +374,14 @@ class PortfolioStrategies:
             print(
                 f'[INSERTION]: {type(object).__name__} returns has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
 
+    @staticmethod
+    def to_pickle(dd,object):
+        path = os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore')
+        pickle_out = open(f'{path}/{type(object).__name__}.pickle','wb')
+        pickle.dump(dd,pickle_out)
+        pickle_out.close()
+        print(f'[INSERTION]: {type(object).__name__} rolling performance has been created @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+
 
 
 if __name__ == '__main__':
@@ -389,5 +399,7 @@ if __name__ == '__main__':
     perf_obj = Table(returns_df)
     perf_df = perf_obj.table_aggregate()
     portfolio_strat_obj.insertion(perf_df,buy_and_hold_obj,table='buy_and_hold_performance')
+    rolling_perf_dd = perf_obj.rolling_aggregate()
+    portfolio_strat_obj.to_pickle(rolling_perf_dd,buy_and_hold_obj)
 
 

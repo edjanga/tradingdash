@@ -61,7 +61,17 @@ class Performance:
     @staticmethod
     def rolling_maxdrawdown(df,window=3):
         roll_maxdrawdown_ls = list(map(lambda x: ep.roll_max_drawdown(x,window), df.transpose().values))
-        return pd.DataFrame(roll_maxdrawdown_ls,index=df.columns).transpose()
+        return pd.DataFrame(roll_maxdrawdown_ls,index=df.columns,columns=df.index[window-1:]).transpose()
+
+    @staticmethod
+    def rolling_sharpe(df,window=3):
+        roll_sharpe_ls = list(map(lambda x: ep.roll_sharpe_ratio(x,window=window), df.transpose().values))
+        return pd.DataFrame(roll_sharpe_ls,index=df.columns,columns=df.index[window - 1:]).transpose()
+
+    @staticmethod
+    def rolling_annual_vol(df,window=3):
+        roll_annual_vol_ls = list(map(lambda x: ep.roll_annual_volatility(x,window=window),df.transpose().values))
+        return pd.DataFrame(roll_annual_vol_ls,index=df.columns,columns=df.index[window - 1:]).transpose()
 
 
 class Table(Performance):
@@ -72,6 +82,7 @@ class Table(Performance):
         self.df = df
         methods_ls = inspect.getmembers(Performance,predicate=inspect.isfunction)
         self.metric_name = [method[-1] for method in methods_ls if 'rolling' not in method[0]]
+        self.rolling_name = [method[-1] for method in methods_ls if 'rolling' in method[0]]
 
     def table_aggregate(self):
 
@@ -95,6 +106,28 @@ class Table(Performance):
         aggregate_perf_df = pd.concat(aggregate_perf_dd, axis=1).droplevel(1, 1).round(4)
         return aggregate_perf_df
 
+    def rolling_aggregate(self):
+
+        aggregate_roll_dd = dict()
+
+        def add_rolling_metrics(rolling_metric,df):
+            aggregate_roll_dd[rolling_metric.__name__] = rolling_metric(df)
+
+            return aggregate_roll_dd
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = []
+            for metric in self.rolling_name:
+                results.append(executor.submit(add_rolling_metrics,metric,self.df))
+            for f in concurrent.futures.as_completed(results):
+                try:
+                    msg = f'[COMPUTATION]: {f.__name__} metric is being computed @ \
+                            {Table.log_obj.now_date()}.\n'
+                    Table.log_obj.log_msg(msg)
+                except AttributeError:
+                    continue
+        return aggregate_roll_dd
+
 
 if __name__ == '__main__':
     allocation = 'buy_and_hold'
@@ -105,5 +138,5 @@ if __name__ == '__main__':
     df.index.name = 'time'
     #perf_obj.rolling_maxdrawdown(df,6)
     table_obj = Table(df)
-    aggregate_perf_df = table_obj.table_aggregate()
-    print(aggregate_perf_df)
+    aggregate_perf_dd = table_obj.rolling_aggregate()
+    print(aggregate_perf_dd.keys())

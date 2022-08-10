@@ -100,16 +100,15 @@ class Data:
         self.logger_obj.log_msg(msg)
         return historical_data_df
 
-    #def write_query_allocation(self):
-    #    return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\";'
+    def write_query_strategies(self,allocation="buy_and_hold"):
+        query = f'PRAGMA table_info(\"{allocation}\");'
+        return query
 
     def write_query_symbol(self,symbol):
         if isinstance(symbol,str):
             symbol = [symbol]
         symbol = [f'\"{sym}\"' for sym in symbol]
-        #pdb.set_trace()
         symbol = ','.join(symbol)
-        #symbol = ''.join(('(',symbol,')'))
         query = f'SELECT {symbol} FROM etfs;'
         return query
 
@@ -129,9 +128,6 @@ class Data:
         table = '_'.join((allocation,'performance'))
         query = f'SELECT * FROM \"{table}\";'
         return query
-
-    #def write_query_risk_free_instrument(self):
-    #    query =
 
     def query(self,query,melt=False,set_index=False):
         df = pd.read_sql(sql=query,con=Data.conn_obj)

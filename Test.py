@@ -15,10 +15,6 @@ class TestData(TestCase):
         self.assertEqual(TestData.data_obj.write_query_equity_curves(allocation=allocation),query_target)
 
     def test_write_query_returns(self,allocation='buy_and_hold'):
-        query_target = f'SELECT * FROM \"{allocation}\_returns\";'
-        self.assertEqual(TestData.data_obj.write_query_returns(allocation=allocation), query_target)
-
-    def test_write_query_returns(self,allocation='tactical_allocation'):
         query_target = f'SELECT * FROM \"{allocation}_returns\";'
         self.assertEqual(TestData.data_obj.write_query_returns(allocation=allocation), query_target)
 
@@ -35,6 +31,10 @@ class TestData(TestCase):
         query_target = f'SELECT {symbol_str} FROM etfs;'
         self.assertEqual(TestData.data_obj.write_query_symbol(symbol=symbol),query_target)
 
+    def test_write_query_strategies(self,allocation='buy_and_hold'):
+        query_target = f'PRAGMA table_info(\"{allocation}\");'
+        self.assertEqual(TestData.data_obj.write_query_strategies(),query_target)
+
 
 if __name__ == '__main__':
     test_data_obj = TestData()
@@ -45,4 +45,5 @@ if __name__ == '__main__':
     test_data_obj.test_write_query_performance(allocation='buy_and_hold')
     test_data_obj.test_write_query_symbol_single()
     test_data_obj.test_write_query_symbol_multiple()
+    test_data_obj.test_write_query_strategies(allocation='buy_and_hold')
 
