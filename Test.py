@@ -26,6 +26,16 @@ class TestData(TestCase):
         query_target = f'SELECT * FROM \"{allocation}_performance\";'
         self.assertEqual(TestData.data_obj.write_query_performance(allocation=allocation), query_target)
 
+    def test_write_query_symbol_single(self,symbol='BIL'):
+        query_target = f'SELECT \"{symbol}\" FROM etfs;'
+        self.assertEqual(TestData.data_obj.write_query_symbol(symbol=symbol),query_target)
+
+    def test_write_query_symbol_multiple(self,symbol=['BIL','JPST','VNQ']):
+        symbol_str = ','.join([f'\"{sym}\"' for sym in symbol])
+        query_target = f'SELECT {symbol_str} FROM etfs;'
+        self.assertEqual(TestData.data_obj.write_query_symbol(symbol=symbol),query_target)
+
+
 if __name__ == '__main__':
     test_data_obj = TestData()
     test_data_obj.test_write_query_equity_curves_buy_and_hold(allocation='buy_and_hold')
@@ -33,4 +43,6 @@ if __name__ == '__main__':
     test_data_obj.test_write_query_returns(allocation='buy_and_hold')
     test_data_obj.test_write_query_returns(allocation='tactical_allocation')
     test_data_obj.test_write_query_performance(allocation='buy_and_hold')
+    test_data_obj.test_write_query_symbol_single()
+    test_data_obj.test_write_query_symbol_multiple()
 

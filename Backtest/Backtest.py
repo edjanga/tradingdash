@@ -63,6 +63,7 @@ class Performance:
         roll_maxdrawdown_ls = list(map(lambda x: ep.roll_max_drawdown(x,window), df.transpose().values))
         return pd.DataFrame(roll_maxdrawdown_ls,index=df.columns).transpose()
 
+
 class Table(Performance):
 
     log_obj = Logs()

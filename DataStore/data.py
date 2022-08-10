@@ -103,6 +103,16 @@ class Data:
     #def write_query_allocation(self):
     #    return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\";'
 
+    def write_query_symbol(self,symbol):
+        if isinstance(symbol,str):
+            symbol = [symbol]
+        symbol = [f'\"{sym}\"' for sym in symbol]
+        #pdb.set_trace()
+        symbol = ','.join(symbol)
+        #symbol = ''.join(('(',symbol,')'))
+        query = f'SELECT {symbol} FROM etfs;'
+        return query
+
     def write_query_allocation(self):
         return 'SELECT name FROM \"sqlite_master\" WHERE type = \"table\" AND name NOT LIKE \"sqlite_%\" AND name NOT LIKE \"%_returns\" AND name NOT LIKE \"%_performance\";'
 
