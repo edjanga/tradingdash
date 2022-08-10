@@ -23,12 +23,12 @@ class TestData(TestCase):
         self.assertEqual(TestData.data_obj.write_query_performance(allocation=allocation), query_target)
 
     def test_write_query_symbol_single(self,symbol='BIL'):
-        query_target = f'SELECT \"{symbol}\" FROM etfs;'
+        query_target = f'SELECT \"{symbol}\",\"index\" FROM price;'
         self.assertEqual(TestData.data_obj.write_query_symbol(symbol=symbol),query_target)
 
     def test_write_query_symbol_multiple(self,symbol=['BIL','JPST','VNQ']):
         symbol_str = ','.join([f'\"{sym}\"' for sym in symbol])
-        query_target = f'SELECT {symbol_str} FROM etfs;'
+        query_target = f'SELECT {symbol_str},\"index\" FROM price;'
         self.assertEqual(TestData.data_obj.write_query_symbol(symbol=symbol),query_target)
 
     def test_write_query_strategies(self,allocation='buy_and_hold'):

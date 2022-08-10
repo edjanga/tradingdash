@@ -7,6 +7,7 @@ from Logger import Logs
 import numpy as np
 from datetime import datetime
 from Backtest import Table
+from Backtest import Performance
 import pickle
 import os
 import empyrical as ep
@@ -14,9 +15,8 @@ import empyrical as ep
 
 data_obj = Data()
 
-def returns(df,adjusted=False):
-    if not adjusted:
-        return np.log(df/df.shift())#pct_change()
+def returns(df):
+    return np.log(df/df.shift())#pct_change()
 
 def weights(weights_ls,returns_df):
     weights_ls = [weights_ls * returns_df.shape[0]]
@@ -50,7 +50,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df,weights_df)
         return equity_curve_df
 
@@ -69,7 +69,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -88,7 +88,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -107,7 +107,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls,returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -125,7 +125,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -140,7 +140,7 @@ class BuyAndHold:
         weights_ls = [.15,.075,.075,.7]
         assert sum(weights_ls) == 1
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -158,7 +158,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -167,14 +167,14 @@ class BuyAndHold:
         """
             50% in equities (20% SPY, 10% SCZ, 8% IWM, 6% EEM, 6% EFA)
             41% in bonds (41% IEF)
-            9% in cash and REITs (5% VNQ, 4% JPST)
+            9% in cash and REITs (5% VNQ, 4% NEAR)
         """
-        universe_df = df.filter(regex=r'(SPY|SCZ|IWM|EEM|EFA|IEF|VNQ|JPST)')
+        universe_df = df.filter(regex=r'(SPY|SCZ|IWM|EEM|EFA|IEF|VNQ|NEAR)')
         returns_df = returns(universe_df)
         weights_ls = [.2,.1,.08,.06,.06,.41,.05,.04]
         assert sum(weights_ls) == 1
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -192,7 +192,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -210,7 +210,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -228,7 +228,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -246,7 +246,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -254,10 +254,10 @@ class BuyAndHold:
     def conservative_income(df):
         """
             70% in bonds (40% AGG, 18% BIL, 7% HYG, 5% BNDX),
-            25% in cash (25% JPST), and
+            25% in cash (25% NEAR), and
             5% in REITs (5% VNQ).
         """
-        universe_df = df.filter(regex=r'(AGG|BIL|HYG|BNDX|JPST|VNQ)')
+        universe_df = df.filter(regex=r'(AGG|BIL|HYG|BNDX|NEAR|VNQ)')
         returns_df = returns(universe_df)
         weights_ls = [.4,.18,.07,.05,.25,.05]
         try:
@@ -266,7 +266,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -274,10 +274,10 @@ class BuyAndHold:
     def conservative_income_tax(df):
         """
             70% in bonds (70% AGG),
-            25% in cash (25% JPST), and
+            25% in cash (25% NEAR), and
             5% in REITs (5% VNQ).
         """
-        universe_df = df.filter(regex=r'(AGG|JPST|VNQ)')
+        universe_df = df.filter(regex=r'(AGG|NEAR|VNQ)')
         returns_df = returns(universe_df)
         weights_ls = [.7,.25,.05]
         try:
@@ -286,7 +286,7 @@ class BuyAndHold:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls,returns_df)
-        weights_df = pd.DataFrame(index=returns_df.index, columns=universe_df.columns, data=weights_ls)
+        weights_df = pd.DataFrame(index=returns_df.index,columns=universe_df.columns,data=weights_ls).shift()
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
@@ -386,16 +386,18 @@ class PortfolioStrategies:
 
 if __name__ == '__main__':
 
-    df = data_obj.simulation(data_obj.universe_ls)
+    query = data_obj.write_query_price()
+    df = data_obj.query(query,set_index=True)
     buy_and_hold_obj = BuyAndHold()
     portfolio_strat_obj = PortfolioStrategies(buy_and_hold_obj,df)
     equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
     equity_curves_df['average'] = equity_curves_df.sum(axis=1)/equity_curves_df.shape[1]
     portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj,table='buy_and_hold')
-    equity_curves_df = equity_curves_df-1
-    portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj,table='buy_and_hold_returns')
+    portfolio_strat_obj.insertion(equity_curves_df-1,buy_and_hold_obj,table='buy_and_hold_returns')
     query = data_obj.write_query_returns()
     returns_df = data_obj.query(query,set_index=True)
+    returns_df.index.name = 'time'
+    perf_obj = Performance()
     perf_obj = Table(returns_df)
     perf_df = perf_obj.table_aggregate()
     portfolio_strat_obj.insertion(perf_df,buy_and_hold_obj,table='buy_and_hold_performance')
