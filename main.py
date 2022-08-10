@@ -43,7 +43,7 @@ def strategies_dropdown(allocation):
     perf_fig = go.Figure(data=[go.Table( \
         header=dict(values=list(perf_df.columns), align='left'), \
         cells=dict(values=perf_df.transpose().values, align='left'))])
-    perf_fig.update_layout(margin={'t': 30, 'b': 10},height=500)
+    perf_fig.update_layout(margin={'t': 30, 'b': 10},height=300)
     content_ls.append(dcc.Graph(figure=perf_fig))
     #pdb.set_trace()
     return content_ls

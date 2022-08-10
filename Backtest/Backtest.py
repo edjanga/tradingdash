@@ -58,6 +58,11 @@ class Performance:
         tail_ratio_ls = list(map(lambda x: ep.tail_ratio(x), df.transpose().values))
         return pd.DataFrame(tail_ratio_ls, index=df.columns)
 
+    @staticmethod
+    def rolling_maxdrawdown(df,window=3):
+        roll_maxdrawdown_ls = list(map(lambda x: ep.roll_max_drawdown(x,window), df.transpose().values))
+        return pd.DataFrame(roll_maxdrawdown_ls,index=df.columns).transpose()
+
 class Table(Performance):
 
     log_obj = Logs()
@@ -65,7 +70,7 @@ class Table(Performance):
     def __init__(self,df):
         self.df = df
         methods_ls = inspect.getmembers(Performance,predicate=inspect.isfunction)
-        self.metric_name = [method[-1] for method in methods_ls]
+        self.metric_name = [method[-1] for method in methods_ls if 'rolling' not in method[0]]
 
     def table_aggregate(self):
 
@@ -97,6 +102,7 @@ if __name__ == '__main__':
     query = data_obj.write_query_returns(allocation)
     df = data_obj.query(query).set_index('index')
     df.index.name = 'time'
+    #perf_obj.rolling_maxdrawdown(df,6)
     table_obj = Table(df)
     aggregate_perf_df = table_obj.table_aggregate()
     print(aggregate_perf_df)
