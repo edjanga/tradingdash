@@ -167,8 +167,7 @@ if __name__ == '__main__':
     df = data_obj.query(query,set_index=True)#.set_index('index')
     df.index.name = 'time'
     #perf_obj.rolling_annual_vol(df)
-    pdb.set_trace()
     table_obj = Table(df)
-    table_obj.rolling_annual_sharpe(df)
-    #aggregate_perf_df = table_obj.table_aggregate()
-    #print(aggregate_perf_df.columns)
+    #table_obj.rolling_annual_sharpe(df)
+    aggregate_perf_df = table_obj.table_aggregate()
+    print(aggregate_perf_df.head())

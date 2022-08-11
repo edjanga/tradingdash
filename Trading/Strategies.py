@@ -354,30 +354,30 @@ class TacticalAllocation:
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
-    @staticmethod
-    def robust_asset_allocation_balanced(df):
-        """
-            15% VNQ, 20% IEF, 20% DBC, 20% MTUM, 10% IWB, 10% EFA and 10% EFV (Tweet)
-            20% VNQ, 10% IEFA, 20% MTUM, 10% IWB, 10% EFA, 10% EFV and 20% IEF (Suggested in the paper)
-        """
-        risky_assets_ls = ['VNQ','IEFA','MTUM','IWB','EFA','EFV','IEF']
-        universe_df = df.filter(regex=r'(VNQ|IEFA|MTUM|IWB|EFA|EFV|IEF|NEAR)')
-        risk_free_asset_s = universe_df['NEAR']
-        returns_df = returns(universe_df)
-        universe_df = universe_df[risky_assets_ls]
-        weights_ls = [.2,.1,.2,.1,.1,.1,.2]
-        try:
-            assert sum(weights_ls) == 1
-        except AssertionError:
-            if abs(1 - sum(weights_ls)) < 1e-8:
-                pass
-        weights_ls = weights(weights_ls, universe_df[risky_assets_ls])
-        weights_df = pd.DataFrame(index=returns_df.index, columns=risky_assets_ls,data=weights_ls).shift()
-        risk_free_asset_ret_s = returns_df['NEAR']
-        pdb.set_trace()
-        returns_12M_df = universe_df.rolling(window=12).apply(lambda x:np.log(x/x.shift()))
-        pdb.set_trace()
-        pd.to_numeric(universe_df.values,downcast='float')
+    # @staticmethod
+    # def robust_asset_allocation_balanced(df):
+    #     """
+    #         15% VNQ, 20% IEF, 20% DBC, 20% MTUM, 10% IWB, 10% EFA and 10% EFV (Tweet)
+    #         20% VNQ, 10% IEFA, 20% MTUM, 10% IWB, 10% EFA, 10% EFV and 20% IEF (Suggested in the paper)
+    #     """
+    #     risky_assets_ls = ['VNQ','IEFA','MTUM','IWB','EFA','EFV','IEF']
+    #     universe_df = df.filter(regex=r'(VNQ|IEFA|MTUM|IWB|EFA|EFV|IEF|NEAR)')
+    #     risk_free_asset_s = universe_df['NEAR']
+    #     returns_df = returns(universe_df)
+    #     universe_df = universe_df[risky_assets_ls]
+    #     weights_ls = [.2,.1,.2,.1,.1,.1,.2]
+    #     try:
+    #         assert sum(weights_ls) == 1
+    #     except AssertionError:
+    #         if abs(1 - sum(weights_ls)) < 1e-8:
+    #             pass
+    #     weights_ls = weights(weights_ls, universe_df[risky_assets_ls])
+    #     weights_df = pd.DataFrame(index=returns_df.index, columns=risky_assets_ls,data=weights_ls).shift()
+    #     risk_free_asset_ret_s = returns_df['NEAR']
+    #     pdb.set_trace()
+    #     returns_12M_df = universe_df.rolling(window=12).apply(lambda x:np.log(x/x.shift()))
+    #     pdb.set_trace()
+    #     pd.to_numeric(universe_df.values,downcast='float')
 
 class PortfolioStrategies:
 
@@ -454,7 +454,7 @@ if __name__ == '__main__':
             equity_curves_df['average'] = equity_curves_df.sum(axis=1)/equity_curves_df.shape[1]
             portfolio_strat_obj.insertion(equity_curves_df,allocation_obj,table=allocation)
             portfolio_strat_obj.insertion(equity_curves_df-1,allocation_obj,table=table_returns)
-            query = data_obj.write_query_returns()
+            query = data_obj.write_query_returns(allocation=allocation)
             returns_df = data_obj.query(query,set_index=True)
             returns_df.index.name = 'time'
             perf_obj = Table(returns_df)
@@ -464,13 +464,21 @@ if __name__ == '__main__':
             portfolio_strat_obj.insertion(perf_df,allocation_obj,table=table_performance)
             rolling_perf_dd = perf_obj.rolling_aggregate()
             portfolio_strat_obj.to_pickle(rolling_perf_dd,allocation_obj)
-    #update(['tactical_allocation'])
+    update(['tactical_allocation'])
     #query = data_obj.write_query_performance(allocation='tactical_allocation')
     #print(query)
-    query = data_obj.write_query_symbol(symbol=['VTI','VEU','VNQ','AGG','DBC'])
-    df = data_obj.query(query,set_index=True)
-    df.index = pd.to_datetime(df.index)
-    pdb.set_trace()
+    #query = data_obj.write_query_symbol(symbol=['VTI','VEU','VNQ','AGG','DBC'])
+    #df = data_obj.query(query,set_index=True)
+    #df.index = pd.to_datetime(df.index)
+    #pdb.set_trace()
+    #strategy_dd = {'buy_and_hold': 'BuyAndHold',
+    #               'tactical_allocation': 'TacticalAllocation'}
+    #path_pickle = os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore')
+    #f = '/'.join((path_pickle, '.'.join((strategy_dd['tactical_allocation'], 'pickle'))))
+    #pickle_in = open(f, 'rb')
+    #rolling_perf_dd = pickle.load(pickle_in)
+    #pickle_in.close()
+    #pdb.set_trace()
     #allocation_obj = TacticalAllocation()
     #allocation_obj.robust_asset_allocation_balanced(df)
 
