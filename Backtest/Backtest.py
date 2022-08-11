@@ -21,18 +21,12 @@ class Performance:
             -data: returns
     """
     @staticmethod
-    def annual_returns(df):
-        #return pd.DataFrame(ep.annual_return(df,period=freq))
+    def returns(df):
+        #return pd.DataFrame(ep.return(df,period=freq))
         return pd.DataFrame(df.mean())
 
     @staticmethod
-    def annual_vol(df):
-        #pd.DataFrame(ep.annual_volatility(df,period=freq),index=df.columns)
-        #return pd.DataFrame(ep.annual_volatility(df,period=freq),index=df.columns)
-        #vol_ls = list(map(lambda x: qt.volatility(x,12), df.transpose().values))
-        #return pd.DataFrame(vol_ls, index=df.columns)
-        #return pd.DataFrame(ep.annual_volatility(df,period=freq),index=df.columns)
-        #pdb.set_trace()
+    def vol(df):
         if isinstance(df,pd.DataFrame):
             return pd.DataFrame(df.std())
         if isinstance(df,pd.Series):
@@ -41,24 +35,25 @@ class Performance:
     @staticmethod
     def returns_adjusted(df):
         query = data_obj.write_query_symbol(symbol=['BIL'])
-        rf_df = data_obj.query(query,set_index=True).apply(lambda x: np.log(x / x.shift()))
-        rf_df = rf_df.fillna(0)
+        rf_df = data_obj.query(query,set_index=True).apply(lambda x: np.log(x/x.shift())).dropna()
         rf_df.index.name = 'time'
-        df_copy = df.subtract(rf_df.values, 1)
+        if isinstance(df,pd.DataFrame):
+            df_copy = df.iloc[1:,:].subtract(rf_df.values, 1)
+        if isinstance(df,pd.Series):
+            df_copy = df[1:] - rf_df.BIL
         return df_copy
 
-    # @staticmethod
-    # def annual_sharpe(df):
-    #     df_copy = Performance.returns_adjusted(df)
-    #     #df_copy = df
-    #     #sharpe_ls = list(map(lambda x: ep.sharpe_ratio(x,period=freq),df_copy.transpose().values))
-    #     #sharpe_ls = list(map(lambda x: qt.sharpe(periods=12), df.transpose().values))
-    #     #return pd.DataFrame(sharpe_ls,index=df.columns)
-    #     return pd.DataFrame(pd.DataFrame(df_copy.iloc[1:,:].mean()/df_copy.iloc[1:,:].std()))
+    @staticmethod
+    def sharpe(df):
+        if isinstance(df,pd.DataFrame):
+            df_copy = Performance.returns_adjusted(df)
+            return pd.DataFrame(pd.DataFrame(df_copy.mean()/df_copy.std()))
+        if isinstance(df,pd.Series):
+            df_copy = Performance.returns_adjusted(df)
+            return df_copy.mean()/df_copy.std()
 
-
     # @staticmethod
-    # def annual_cagr(df,freq='monthly'):
+    # def cagr(df,freq='monthly'):
     #     return pd.DataFrame(ep.cagr(df,period=freq),index=df.columns)
 
     @staticmethod
@@ -67,16 +62,13 @@ class Performance:
         return pd.DataFrame(cvar_ls,index=df.columns)
     #
     # @staticmethod
-    # def annual_calmar_ratio(df,freq='monthly'):
+    # def calmar_ratio(df,freq='monthly'):
     #     df_copy = Performance.returns_adjusted(df)
     #     calmar_ratio_ls = list(map(lambda x:ep.calmar_ratio(x,period=freq),df_copy.transpose().values))
     #     return pd.DataFrame(calmar_ratio_ls,index=df.columns)
 
     @staticmethod
     def maxdrawdown(df):
-        #pdb.set_trace()
-        #maxdrawdowns_ls = list(map(lambda x: ep.max_drawdown(x),(df+1).transpose().values))
-        #return pd.DataFrame(maxdrawdowns_ls,index=df.columns)
         if isinstance(df,pd.Series):
             df_copy = pd.DataFrame(df+1)
             df_copy = df_copy.div(df_copy.cummax()) - 1
@@ -88,8 +80,6 @@ class Performance:
             max_drawdown_s = df_copy.cummin().min()
             return pd.DataFrame(max_drawdown_s)
 
-
-
     @staticmethod
     def skew(df):
         skew_ls = list(map(lambda x: skew(x),df.transpose().values))
@@ -100,61 +90,20 @@ class Performance:
         kurtosis_ls = list(map(lambda x: kurtosis(x), df.transpose().values))
         return pd.DataFrame(kurtosis_ls, index=df.columns)
 
-    # @staticmethod
-    # def tail_ratio(df):
-    #     tail_ratio_ls = list(map(lambda x: ep.tail_ratio(x), df.transpose().values))
-    #     return pd.DataFrame(tail_ratio_ls, index=df.columns)
-
     @staticmethod
-    def rolling_maxdrawdown(df,rolling_period=3):
-        #roll_maxdrawdown_ls = list(map(lambda x: ep.roll_max_drawdown(x,rolling_period), df.transpose().values))
-        #return pd.DataFrame(roll_maxdrawdown_ls,index=df.columns,columns=df.index[rolling_period-1:]).transpose()
+    def rolling_maxdrawdown(df,rolling_period=12):
         return df.rolling(rolling_period).apply(Performance.maxdrawdown).dropna()
 
-
-    # @staticmethod
-    # def rolling_sharpe(df,rolling_period=3,freq='monthly'):
-    #     try:
-    #         df_copy = Performance.returns_adjusted(df)
-    #         #roll_sharpe_ls = list(map(lambda x: ep.roll_sharpe_ratio(x,window=rolling_period,period=freq),\
-    #         #                          df.transpose().values))
-    #         #roll_sharpe_ls = list(map(lambda x: pf.rolling_sharpe(x,rolling_sharpe_window=rolling_period),\
-    #         #                          df.transpose().values))
-    #         #return pd.DataFrame(roll_sharpe_ls,index=df.columns,columns=df.index[rolling_period - 1:]).transpose()
-    #         #pf.rolling_sharpe(x,rolling_sharpe_window=rolling_period)
-    #         #roll_sharpe_ls = list(map(lambda x: x.rolling(window=rolling_period).apply(ep.sharpe_ratio,period=freq), \
-    #         #                          df_copy.transpose().values))
-    #         #roll_sharpe_ls = list(map(lambda x: ep.roll_sharpe_ratio(x,period=freq), df_copy.transpose().values))
-    #         # roll_sharpe_ls = list(map(lambda x: qt.rolling_sharpe(x,rolling_period=rolling_period,\
-    #         #                  periods_per_year=12,prepare_returns=False),df.transpose().values))
-    #         #return pd.DataFrame(roll_sharpe_ls, index=df.columns, columns=df.index[rolling_period-1:]).transpose()
-    #     except AttributeError:
-    #         pdb.set_trace()
-    #     except NameError:
-    #         df_copy = Performance.returns_adjusted(df)
-    #     finally:
-    #         pdb.set_trace()
-    #         roll_sharpe_ls = list(map(lambda x: x.rolling(window=rolling_period).apply(ep.sharpe_ratio, period=freq), \
-    #                                   df_copy.transpose()))#.values
-    #         pdb.set_trace()
-    #         return pd.DataFrame(roll_sharpe_ls, index=df.columns, columns=df.index[rolling_period - 1:]).transpose()
+    @staticmethod
+    def rolling_sharpe(df,rolling_period=12):
+        df_copy = Performance.returns_adjusted(df)
+        #return df.rolling(rolling_period).apply(Performance.sharpe).dropna()
+        return df_copy.rolling(rolling_period).apply(lambda x:x.mean()/x.std()).dropna()
 
     @staticmethod
-    def rolling_annual_sharpe(df,rolling_period=3):
-        # roll_annual_vol_ls = list(map(lambda x: ep.roll_annual_volatility(x,window=rolling_period,period=freq),\
-        #                              df.transpose().values))
-        return df.rolling(rolling_period).apply(Performance.annual_sharpe).dropna()
-
-    @staticmethod
-    def rolling_annual_vol(df,rolling_period=3):
-        #roll_annual_vol_ls = list(map(lambda x: ep.roll_annual_volatility(x,window=rolling_period,period=freq),\
-        #                              df.transpose().values))
-        return df.rolling(rolling_period).apply(Performance.annual_vol).dropna()
-        #pdb.set_trace()
-        #roll_annual_vol_ls = list(map(lambda x: qt.rolling_volatility(x,rolling_period=rolling_period,\
-        #periods_per_year=12,prepare_returns=False), df.transpose().values))
-        #pdb.set_trace()
-        #return pd.DataFrame(roll_annual_vol_ls, index=df.columns, columns=df.index[rolling_period - 1:]).transpose()
+    def rolling_vol(df,rolling_period=12):
+        return df.rolling(rolling_period).std().dropna()
+        #return df.rolling(rolling_period).apply(Performance.annual_vol).dropna()
 
 
 class Table(Performance):
@@ -222,6 +171,6 @@ if __name__ == '__main__':
     #perf_obj.rolling_annual_vol(df)
     #pdb.set_trace()
     table_obj = Table(df)
-    table_obj.rolling_maxdrawdown(df)
+    table_obj.rolling_annual_sharpe(df)
     #aggregate_perf_df = table_obj.table_aggregate()
     #print(aggregate_perf_df.columns)

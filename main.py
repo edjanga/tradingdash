@@ -54,7 +54,6 @@ def aggregate_layout(allocation):
         cells=dict(values=perf_df.transpose().values, align='left'))])
     perf_fig.update_layout(margin={'t': 30, 'b': 10},height=300)
     content_ls.append(dcc.Graph(figure=perf_fig))
-    #pdb.set_trace()
     return content_ls
 
 @app.callback(
@@ -83,9 +82,14 @@ def strategy_layout(allocation,strategy):
     rolling_perf_metrics_ls = rolling_perf_df.columns.tolist()
     fig = make_subplots(rows=len(rolling_perf_metrics_ls),cols=1,shared_xaxes=True,x_title='time')
     for i,col in enumerate(rolling_perf_metrics_ls):
-        fig.add_trace(go.Scatter(x=rolling_perf_df.index,\
-                                 y=rolling_perf_df[col],\
-                                 mode='lines',name=f'{col}'),row=i+1,col=1)
+        if col == 'rolling_maxdrawdown':
+            fig.add_trace(go.Scatter(x=rolling_perf_df.index,\
+                                     y=rolling_perf_df[col],\
+                                     mode='lines',name=f'{col}',fill='tozeroy'),row=i+1,col=1)
+        else:
+            fig.add_trace(go.Scatter(x=rolling_perf_df.index, \
+                                     y=rolling_perf_df[col], \
+                                     mode='lines', name=f'{col}'),row=i+1,col=1)
     return fig
 
 if __name__ == '__main__':

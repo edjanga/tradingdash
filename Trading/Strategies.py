@@ -15,8 +15,11 @@ import empyrical as ep
 
 data_obj = Data()
 
-def returns(df):
-    return np.log(df/df.shift())#pct_change()
+def returns(df,annualised=False):
+    if annualised:
+        return ((np.log(df/df.shift())+1)**12) - 1
+    else:
+        return np.log(df/df.shift())
 
 def weights(weights_ls,returns_df):
     weights_ls = [weights_ls * returns_df.shape[0]]
