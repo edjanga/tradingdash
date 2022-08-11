@@ -74,8 +74,21 @@ class Performance:
 
     @staticmethod
     def maxdrawdown(df):
-        maxdrawdowns_ls = list(map(lambda x: ep.max_drawdown(x),df.transpose().values))
-        return pd.DataFrame(maxdrawdowns_ls,index=df.columns)
+        #pdb.set_trace()
+        #maxdrawdowns_ls = list(map(lambda x: ep.max_drawdown(x),(df+1).transpose().values))
+        #return pd.DataFrame(maxdrawdowns_ls,index=df.columns)
+        if isinstance(df,pd.Series):
+            df_copy = pd.DataFrame(df+1)
+            df_copy = df_copy.div(df_copy.cummax()) - 1
+            max_drawdown_s = df_copy.cummin().min()
+            return max_drawdown_s
+        if isinstance(df,pd.DataFrame):
+            df_copy = df+1
+            df_copy = df_copy.div(df_copy.cummax()) - 1
+            max_drawdown_s = df_copy.cummin().min()
+            return pd.DataFrame(max_drawdown_s)
+
+
 
     @staticmethod
     def skew(df):
@@ -94,8 +107,9 @@ class Performance:
 
     @staticmethod
     def rolling_maxdrawdown(df,rolling_period=3):
-        roll_maxdrawdown_ls = list(map(lambda x: ep.roll_max_drawdown(x,rolling_period), df.transpose().values))
-        return pd.DataFrame(roll_maxdrawdown_ls,index=df.columns,columns=df.index[rolling_period-1:]).transpose()
+        #roll_maxdrawdown_ls = list(map(lambda x: ep.roll_max_drawdown(x,rolling_period), df.transpose().values))
+        #return pd.DataFrame(roll_maxdrawdown_ls,index=df.columns,columns=df.index[rolling_period-1:]).transpose()
+        return df.rolling(rolling_period).apply(Performance.maxdrawdown).dropna()
 
 
     # @staticmethod
@@ -208,6 +222,6 @@ if __name__ == '__main__':
     #perf_obj.rolling_annual_vol(df)
     #pdb.set_trace()
     table_obj = Table(df)
-    table_obj.rolling_annual_vol(df)
+    table_obj.rolling_maxdrawdown(df)
     #aggregate_perf_df = table_obj.table_aggregate()
     #print(aggregate_perf_df.columns)
