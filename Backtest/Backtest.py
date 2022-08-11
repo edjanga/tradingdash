@@ -88,7 +88,7 @@ class Performance:
     @staticmethod
     def kurtosis(df):
         kurtosis_ls = list(map(lambda x: kurtosis(x), df.transpose().values))
-        return pd.DataFrame(kurtosis_ls, index=df.columns)
+        return pd.DataFrame(kurtosis_ls,index=df.columns)
 
     @staticmethod
     def rolling_maxdrawdown(df,rolling_period=12):
@@ -97,13 +97,11 @@ class Performance:
     @staticmethod
     def rolling_sharpe(df,rolling_period=12):
         df_copy = Performance.returns_adjusted(df)
-        #return df.rolling(rolling_period).apply(Performance.sharpe).dropna()
         return df_copy.rolling(rolling_period).apply(lambda x:x.mean()/x.std()).dropna()
 
     @staticmethod
     def rolling_vol(df,rolling_period=12):
         return df.rolling(rolling_period).std().dropna()
-        #return df.rolling(rolling_period).apply(Performance.annual_vol).dropna()
 
 
 class Table(Performance):

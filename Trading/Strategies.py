@@ -327,7 +327,32 @@ class BuyAndHold:
 
 class TacticalAllocation:
 
-    pass
+
+    @staticmethod
+    def ivy(df):
+        """
+            20% VTI,20% VEU,20% VNQ,20% AGG and 20% DBC + NEAR
+        """
+        risky_assets_ls = ['VTI','VEU','VNQ','AGG','DBC']
+        universe_df = df.filter(regex=r'(VTI|VEU|VNQ|AGG|DBC|NEAR)')
+        returns_df = returns(universe_df)
+        universe_df = universe_df[risky_assets_ls]
+        weights_ls = [.2] * (returns_df.shape[1]-1)
+        try:
+            assert sum(weights_ls) == 1
+        except AssertionError:
+            if abs(1 - sum(weights_ls)) < 1e-8:
+                pass
+        weights_ls = weights(weights_ls,returns_df[risky_assets_ls])
+        weights_df = pd.DataFrame(index=returns_df.index,columns=risky_assets_ls,\
+                                  data=weights_ls).shift()
+        risky_assets_allocation_df = weights_df.mul((universe_df > universe_df.rolling(window=10).mean()))
+        cash_allocation_s = (universe_df>universe_df.rolling(window=10).mean()).apply(lambda x:x.value_counts(False),\
+                                                                                      axis=1)[False]*0.2
+        cash_allocation_s.name = 'NEAR'
+        weights_df = risky_assets_allocation_df.join(cash_allocation_s,how='left')
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
 class PortfolioStrategies:
 
@@ -389,22 +414,30 @@ class PortfolioStrategies:
 
 if __name__ == '__main__':
 
-    query = data_obj.write_query_price()
-    df = data_obj.query(query,set_index=True)
-    buy_and_hold_obj = BuyAndHold()
-    portfolio_strat_obj = PortfolioStrategies(buy_and_hold_obj,df)
-    equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
-    equity_curves_df['average'] = equity_curves_df.sum(axis=1)/equity_curves_df.shape[1]
-    portfolio_strat_obj.insertion(equity_curves_df,buy_and_hold_obj,table='buy_and_hold')
-    portfolio_strat_obj.insertion(equity_curves_df-1,buy_and_hold_obj,table='buy_and_hold_returns')
-    query = data_obj.write_query_returns()
-    returns_df = data_obj.query(query,set_index=True)
-    returns_df.index.name = 'time'
-    perf_obj = Performance()
-    perf_obj = Table(returns_df)
-    perf_df = perf_obj.table_aggregate()
-    portfolio_strat_obj.insertion(perf_df,buy_and_hold_obj,table='buy_and_hold_performance')
-    rolling_perf_dd = perf_obj.rolling_aggregate()
-    portfolio_strat_obj.to_pickle(rolling_perf_dd,buy_and_hold_obj)
+    def update(allocations=['buy_and_hold','tactical_allocation']):
+        query = data_obj.write_query_price()
+        df = data_obj.query(query, set_index=True)
+        for allocation in allocations:
+            if allocation == 'buy_and_hold':
+                allocation_obj = BuyAndHold()
+            if allocation == 'tactical_allocation':
+                allocation_obj = TacticalAllocation()
+            table_returns = '_'.join((allocation, 'returns'))
+            table_performance = '_'.join((allocation,'performance'))
+            portfolio_strat_obj = PortfolioStrategies(allocation_obj,df)
+            equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
+            equity_curves_df['average'] = equity_curves_df.sum(axis=1)/equity_curves_df.shape[1]
+            portfolio_strat_obj.insertion(equity_curves_df,allocation_obj,table=allocation)
+            portfolio_strat_obj.insertion(equity_curves_df-1,allocation_obj,table=table_returns)
+            query = data_obj.write_query_returns()
+            returns_df = data_obj.query(query,set_index=True)
+            returns_df.index.name = 'time'
+            #perf_obj = Performance()
+            perf_obj = Table(returns_df)
+            perf_df = perf_obj.table_aggregate()
+            portfolio_strat_obj.insertion(perf_df,allocation_obj,table=table_performance)
+            rolling_perf_dd = perf_obj.rolling_aggregate()
+            portfolio_strat_obj.to_pickle(rolling_perf_dd,allocation_obj)
+    update(['tactical_allocation'])
 
 
