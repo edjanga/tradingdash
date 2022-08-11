@@ -160,14 +160,14 @@ class Table(Performance):
 
 
 if __name__ == '__main__':
-    allocation = 'buy_and_hold'
+    allocation = 'tactical_allocation'
     data_obj = Data()
     perf_obj = Performance()
     query = data_obj.write_query_returns(allocation)
     df = data_obj.query(query,set_index=True)#.set_index('index')
     df.index.name = 'time'
     #perf_obj.rolling_annual_vol(df)
-    #pdb.set_trace()
+    pdb.set_trace()
     table_obj = Table(df)
     table_obj.rolling_annual_sharpe(df)
     #aggregate_perf_df = table_obj.table_aggregate()
