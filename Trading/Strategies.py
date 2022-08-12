@@ -505,6 +505,39 @@ class TacticalAllocation:
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
+    @staticmethod
+    def defensive_asset_allocation(df):
+        """
+            Risky assets: SPY, IWM, QQQ, VGK, EWJ, EEM, VNQ, DBC, GLD, TLT, HYG, LQD
+            Protective assets: SHY, IEF
+            Canary assets: EEM, AGG
+        """
+        risky_assets_ls = ['SPY','IWM','QQQ','VGK', 'EWJ', 'EEM', 'VNQ', 'DBC', 'GLD', 'TLT', 'LQD', 'HYG','LQD']
+
+        protective_assets_ls = ['SHY', 'IEF', 'BIL']
+        canary_assets_ls = ['EEM','AGG']
+        regex = [f'^{sym}$' for sym in risky_assets_ls+protective_assets_ls+canary_assets_ls]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=returns_df.columns)
+        momentum_score_df = momentum_score(universe_df)
+        canary_assets_positive_score_s = 2*(momentum_score_df[canary_assets_ls] > 0).apply(lambda x: x.value_counts(True),\
+                                                                                           axis=1)[True]
+        canary_assets_positive_score_s = canary_assets_positive_score_s.fillna(0)
+        for date, series_s in momentum_score_df.iterrows():
+            n = canary_assets_positive_score_s[date]
+            protective_assets_highest_score = series_s[protective_assets_ls].sort_values(ascending=False).index[0]
+            risky_assets_highest_score = series_s[risky_assets_ls].sort_values(ascending=False)
+            if n == 2:
+                weights_df.loc[date,protective_assets_highest_score] = 1
+            if n in [0,1]:
+                weights_df.loc[date, protective_assets_highest_score] = .5*n
+                weights_df.loc[date, risky_assets_highest_score.index.tolist()] = (1-.5*n)/6
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
+
+
 
 
     # @staticmethod
@@ -622,7 +655,7 @@ if __name__ == '__main__':
     #query = data_obj.write_query_price()
     #df = data_obj.query(query, set_index=True)
     #allocation_obj = TacticalAllocation()
-    #allocation_obj.vigilant_asset_allocation_g4(df)
+    #allocation_obj.defensive_asset_allocation(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
