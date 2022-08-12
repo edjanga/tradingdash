@@ -1,4 +1,3 @@
-import empyrical as ep
 import pandas as pd
 import numpy as np
 import concurrent.futures
@@ -7,7 +6,6 @@ import inspect
 from Logger import Logs
 from scipy.stats import skew,kurtosis
 import pdb
-from quantstats import stats as qt
 
 data_obj = Data()
 

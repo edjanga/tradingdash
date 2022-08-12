@@ -10,7 +10,6 @@ from Backtest import Table
 from Backtest import Performance
 import pickle
 import os
-import empyrical as ep
 
 
 data_obj = Data()
@@ -360,7 +359,7 @@ class TacticalAllocation:
             20% VNQ, 10% IEFA, 20% MTUM, 10% IWB, 10% EFA, 10% EFV and 20% IEF (Suggested in the paper)
         """
         risky_assets_ls = ['VNQ','IEFA','MTUM','IWB','EFA','EFV','IEF']
-        universe_df = df.filter(regex=r'(VNQ|IEFA|MTUM|IWB|EFA|EFV|IEF|NEAR)')
+        universe_df = df.filter(regex=r'(VNQ|^IEFA$|MTUM|IWB|^EFA$|EFV|^IEF$|NEAR)')
         risk_free_asset_s = universe_df['NEAR']
         returns_df = returns(universe_df)
         universe_df = universe_df[risky_assets_ls]
@@ -384,6 +383,35 @@ class TacticalAllocation:
         weights_df = risky_assets_allocation_df.join(cash_allocation_s, how='left')
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
+
+    @staticmethod
+    def global_tactical_asset_allocation(df):
+        """
+            5% IWD, 5% MTUM, 5% IWN, 5% DWAS, 10% EFA, 10% EEM, 5% IEF, 5% BWX, 5% LQD, 5% TLT, 10% DBC,
+            10% GLD and 20% VNQ
+        """
+        risky_assets_ls = ['IWD','MTUM','IWM','DWAS','EFA','EEM','IEF','BWX','LQD','TLT','DBC','GLD','VNQ']
+        universe_df = df.filter(regex=r'(IWD|VNQ|MTUM|IWM|DWAS|^EFA$|EEM|^IEF$|BWX|LQD|TLT|DBC|GLD|VNQ|NEAR)')
+        risk_free_asset_s = universe_df['NEAR']
+        returns_df = returns(universe_df)
+        universe_df = universe_df[risky_assets_ls]
+        weights_ls = [.05,.05,.05,.05,.1,.1,.05,.05,.05,.05,.1,.1,.2]
+        try:
+            assert sum(weights_ls) == 1
+        except AssertionError:
+            if abs(1 - sum(weights_ls)) < 1e-8:
+                pass
+        weights_ls = weights(weights_ls, universe_df[risky_assets_ls])
+        risky_assets_allocation_df = pd.DataFrame(index=returns_df.index, columns=risky_assets_ls,data=weights_ls).shift()
+        price_10M_df = universe_df.rolling(10).mean()
+        signal_df = universe_df.gt(price_10M_df)
+        risk_free_asset_allocation_s = signal_df.apply(lambda x:x.value_counts(False),axis=1)/signal_df.shape[1]
+        risk_free_asset_allocation_s = risk_free_asset_allocation_s[False]
+        weights_df = risky_assets_allocation_df.join(risk_free_asset_allocation_s,how='left')
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
+
+
 
 
 class PortfolioStrategies:
@@ -479,8 +507,8 @@ if __name__ == '__main__':
     #pdb.set_trace()
     #query = data_obj.write_query_price()
     #df = data_obj.query(query, set_index=True)
-    #allocation_obj = BuyAndHold()
-    #allocation_obj.income_growth(df)
+    #allocation_obj = TacticalAllocation()
+    #allocation_obj.global_tactical_asset_allocation(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
