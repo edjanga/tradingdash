@@ -392,7 +392,6 @@ class TacticalAllocation:
         """
         risky_assets_ls = ['IWD','MTUM','IWM','DWAS','EFA','EEM','IEF','BWX','LQD','TLT','DBC','GLD','VNQ']
         universe_df = df.filter(regex=r'(IWD|VNQ|MTUM|IWM|DWAS|^EFA$|EEM|^IEF$|BWX|LQD|TLT|DBC|GLD|VNQ|NEAR)')
-        risk_free_asset_s = universe_df['NEAR']
         returns_df = returns(universe_df)
         universe_df = universe_df[risky_assets_ls]
         weights_ls = [.05,.05,.05,.05,.1,.1,.05,.05,.05,.05,.1,.1,.2]
@@ -410,6 +409,61 @@ class TacticalAllocation:
         weights_df = risky_assets_allocation_df.join(risk_free_asset_allocation_s,how='left')
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
+
+    @staticmethod
+    def diversified_gem_dual_momentum(df):
+        """
+            43% SPY, 30% AGG, 27% EFA
+        """
+        universe_df = df.filter(regex=r'(SPY|AGG|^EFA$)')
+        returns_df = returns(universe_df)
+        weights_ls = [.43,.3,.27]
+        try:
+            assert sum(weights_ls) == 1
+        except AssertionError:
+            if abs(1 - sum(weights_ls)) < 1e-8:
+                pass
+        weights_ls = weights(weights_ls,universe_df)
+        weights_df = pd.DataFrame(index=returns_df.index,columns=universe_df.columns.tolist(),data=weights_ls)
+        returns_lookback_dd = dict()
+        for i in range(7,13):
+            temp_df = universe_df.pct_change(periods=i)
+            series_s = temp_df['SPY']>temp_df['AGG']
+            returns_lookback_dd[f'{i}_months'] = series_s
+        returns_lookback_df = pd.DataFrame(returns_lookback_dd)
+        spy_agg_df = returns_lookback_df.apply(lambda x:x.value_counts(True),axis=1)#/returns_lookback_df.shape[1]
+        dd = {'SPY':np.where(returns_df.SPY > returns_df.AGG, True, False),\
+              'EFA':np.where(returns_df.SPY < returns_df.AGG, True, False)}
+
+        spy_efa_df = pd.DataFrame(data=dd, index=returns_df.index)
+        spy_efa_df = spy_efa_df.mul(spy_agg_df[True],axis=0)
+        agg_s = spy_agg_df[False]
+        agg_s.name = 'AGG'
+        spy_agg_efa_df = spy_efa_df.join(agg_s,how='left')
+        weights_df = weights_df.mul(spy_agg_efa_df)
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
+
+
+
+
+    # @staticmethod
+    # def generalised_protective_momentum(df):
+    #     """
+    #         Risk:  SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, DBC, GLD, HYG, and LQD
+    #         Safety: BIL, IEF
+    #     """
+    #     risky_assets_ls = ['SPY','QQQ','IWM','VGK','EWJ','EEM','VNQ','DBC','GLD','HYG','LQD']
+    #     safety_assets_ls = ['BIL','IEF']
+    #     regex = [f'^{sym}$' for sym in risky_assets_ls+safety_assets_ls]
+    #     regex = ''.join(('(','|'.join(regex),')'))
+    #     universe_df = df.filter(regex=f'{regex}')
+    #     returns_df = returns(universe_df)
+    #     ri_df = (universe_df.pct_change(periods=1)+universe_df.pct_change(periods=3)\
+    #              +universe_df.pct_change(periods=6)+universe_df.pct_change(periods=12))#.apply(lambda x:x.mean())
+    #     pdb.set_trace()
+
+
 
 
 
@@ -508,7 +562,7 @@ if __name__ == '__main__':
     #query = data_obj.write_query_price()
     #df = data_obj.query(query, set_index=True)
     #allocation_obj = TacticalAllocation()
-    #allocation_obj.global_tactical_asset_allocation(df)
+    #allocation_obj.diversified_gem_dual_momentum(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
