@@ -22,8 +22,9 @@ class Performance:
     """
     @staticmethod
     def returns(df):
-        #return pd.DataFrame(ep.return(df,period=freq))
-        return pd.DataFrame(df.mean())
+        t = (df.index[-1] - df.index[0]).days / 365.25
+        return (df+1).apply(lambda x,t: (x[-1] / x[0]) ** (1 /t) - 1,args=[t])
+
 
     @staticmethod
     def vol(df):
@@ -51,10 +52,6 @@ class Performance:
         if isinstance(df,pd.Series):
             df_copy = Performance.returns_adjusted(df)
             return df_copy.mean()/df_copy.std()
-
-    # @staticmethod
-    # def cagr(df,freq='monthly'):
-    #     return pd.DataFrame(ep.cagr(df,period=freq),index=df.columns)
 
     @staticmethod
     def cvar(df):
@@ -160,14 +157,16 @@ class Table(Performance):
 
 
 if __name__ == '__main__':
-    allocation = 'tactical_allocation'
+    allocation = 'buy_and_hold'
     data_obj = Data()
     perf_obj = Performance()
     query = data_obj.write_query_returns(allocation)
     df = data_obj.query(query,set_index=True)#.set_index('index')
     df.index.name = 'time'
+    pdb.set_trace()
     #perf_obj.rolling_annual_vol(df)
     table_obj = Table(df)
-    #table_obj.rolling_annual_sharpe(df)
+    table_obj.returns(df)
+    pdb.set_trace()
     aggregate_perf_df = table_obj.table_aggregate()
     print(aggregate_perf_df.head())

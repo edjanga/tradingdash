@@ -137,8 +137,10 @@ class Data:
         df = pd.read_sql(sql=query,con=Data.conn_obj)
         if melt:
             df = pd.melt(df,id_vars='index',var_name='strategy',value_name='equity_curve')
+            #df['index'] = pd.to_datetime(df.index)
         if set_index:
             df = df.set_index('index')
+            df.index = pd.to_datetime(df.index)
         return df
 
     def close(self):

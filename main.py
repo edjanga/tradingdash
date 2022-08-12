@@ -32,10 +32,13 @@ app.layout = html.Div([dcc.RadioItems(id='allocation',options=allocation_ls,valu
 def aggregate_layout(allocation):
     content_ls = []
     query = data_obj.write_query_equity_curves(allocation=allocation)
-    equity_curves_aggregate_df = data_obj.query(query=query,melt=True).rename(columns={'index':'time'})
-    equity_curves_fig = px.line(data_frame=equity_curves_aggregate_df,
-                  x='time',\
-                  y='equity_curve',color='strategy')
+    #equity_curves_aggregate_df = data_obj.query(query=query,melt=True).rename(columns={'index':'time'})
+    equity_curves_aggregate_df = data_obj.query(query=query, melt=True,set_index=True).rename(index={'index': 'time'})
+    #pdb.set_trace()
+    # equity_curves_fig = px.line(data_frame=equity_curves_aggregate_df,
+    #               x='time',\
+    #               y='equity_curve',color='strategy')
+    equity_curves_fig = px.line(data_frame=equity_curves_aggregate_df,y='equity_curve', color='strategy')
     equity_curves_fig.add_hline(y=1)
     content_ls.append(html.Br())
     content_ls.append(dcc.Graph(figure=equity_curves_fig))
