@@ -21,7 +21,7 @@ class Data:
     tiingo_config_obj = TiingoConfig(os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/Config/config_platform.json'))
     universe_ls = ['SHY','TLT','VTI','IWN','GLD','BNDX','LQD','VEU','VNQ','SPY','TIP','DBC',\
     'EFA','EEM','BIL','IEF','DLS','AGG','IWD','IWM','EFV','SCZ','HYG','NEAR','QQQ','MTUM','IWB','IEFA',\
-    'DWAS','BWX']
+    'DWAS','BWX','VGK','EWJ']
 
     def __init__(self,startDate=datetime.now()):
         self.startDate = startDate - relativedelta(years=25)

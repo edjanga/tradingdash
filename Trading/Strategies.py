@@ -25,6 +25,11 @@ def weights(weights_ls,df):
     weights_ls = np.reshape(np.array(weights_ls), newshape=(df.shape[0],df.shape[1]))
     return weights_ls
 
+def momentum_score(df):
+    df_copy = df.apply(lambda x:12*(x/x.shift())+4*(x/x.shift(3))+2*(x/x.shift(6))+(x/x.shift(12)))
+    df_copy = df_copy - 19
+    return df_copy
+
 def equity_curve(returns_df,weights_df):
     weights_df = weights_df.shift()
     equity_curve_df = pd.DataFrame((weights_df.mul(returns_df).sum(axis=1)+1).cumprod())
@@ -444,6 +449,61 @@ class TacticalAllocation:
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
+    @staticmethod
+    def vigilant_asset_allocation_g12(df):
+        """
+            Risky assets =  SPY, IWM, QQQ, VGK, EWJ, EEM, VNQ, DBC, GLD, TLT, LQD, and HYG
+            Safe assets = IEF LQD, and BIL
+        """
+        risky_assets_ls = ['SPY', 'IWM', 'QQQ', 'VGK', 'EWJ', 'EEM', 'VNQ', 'DBC', 'GLD', 'TLT', 'LQD', 'HYG']
+        safe_assets_ls = ['IEF','LQD','BIL']
+        regex = [f'^{sym}$' for sym in risky_assets_ls+safe_assets_ls]
+        regex = ''.join(('(','|'.join(regex),')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        weights_df = pd.DataFrame(index=returns_df.index,columns=returns_df.columns)
+        momentum_score_df = momentum_score(universe_df)
+        negative_score_s = (momentum_score_df>0).apply(lambda x:x.value_counts(False),axis=1)[False]
+        for date, series_s in momentum_score_df.iterrows():
+            n = negative_score_s[date]
+            range_n_less_than_4 = list(range(0,4))
+            safe_assets_highest_score = series_s[safe_assets_ls].sort_values(ascending=False).index[0]
+            risky_assets_highest_score = series_s[risky_assets_ls].sort_values(ascending=False)
+            if n>=4:
+                weights_df.loc[date,safe_assets_highest_score] = 1.0
+            if n in range_n_less_than_4:
+                weights_df.loc[date, safe_assets_highest_score] = .25*n
+                risky_assets_n3_ls = risky_assets_highest_score[:5].index.tolist()
+                weights_df.loc[date,risky_assets_n3_ls] = (1-(.25*n))/5
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
+
+    @staticmethod
+    def vigilant_asset_allocation_g4(df):
+        """
+             Risk assets: SPY, EFA, EEM, and AGG
+             Safety assets: LQD, IEF, and BIL
+        """
+        risky_assets_ls = ['SPY','EFA','EEM','AGG']
+        safe_assets_ls = ['IEF', 'LQD', 'BIL']
+        regex = [f'^{sym}$' for sym in risky_assets_ls + safe_assets_ls]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        weights_df = pd.DataFrame(index=returns_df.index, columns=returns_df.columns)
+        momentum_score_df = momentum_score(universe_df)
+        risky_assets_negative_score_s = (momentum_score_df[risky_assets_ls] > 0).apply(lambda x: x.value_counts(False),\
+                                                                                   axis=1)[False]
+        for date, series_s in momentum_score_df.iterrows():
+            n = risky_assets_negative_score_s[date]
+            safe_assets_highest_score = series_s[safe_assets_ls].sort_values(ascending=False)
+            risky_assets_highest_score = series_s[risky_assets_ls].sort_values(ascending=False)
+            if n == 0:
+                weights_df.loc[date,risky_assets_highest_score.index[0]] = 1
+            if n>0:
+                weights_df.loc[date,safe_assets_highest_score.index[0]] = 1
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
 
 
@@ -562,7 +622,7 @@ if __name__ == '__main__':
     #query = data_obj.write_query_price()
     #df = data_obj.query(query, set_index=True)
     #allocation_obj = TacticalAllocation()
-    #allocation_obj.diversified_gem_dual_momentum(df)
+    #allocation_obj.vigilant_asset_allocation_g4(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
