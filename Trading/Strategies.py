@@ -411,7 +411,7 @@ class TacticalAllocation:
             if abs(1 - sum(weights_ls)) < 1e-8:
                 pass
         weights_ls = weights(weights_ls, universe_df[risky_assets_ls])
-        risky_assets_allocation_df = pd.DataFrame(index=returns_df.index, columns=risky_assets_ls,data=weights_ls).shift()
+        risky_assets_allocation_df = pd.DataFrame(index=returns_df.index, columns=risky_assets_ls,data=weights_ls)
         price_10M_df = universe_df.rolling(10).mean()
         signal_df = universe_df.gt(price_10M_df)
         risk_free_asset_allocation_s = signal_df.apply(lambda x:x.value_counts(False),axis=1)/signal_df.shape[1]
@@ -544,7 +544,28 @@ class TacticalAllocation:
 
     @staticmethod
     def gem_dual_momentum(df):
-        pass
+        """
+            45% SPY, 28% AGG, 27% EFA and BIL
+        """
+        risky_assets_ls = ['SPY','AGG','EFA']
+        safe_assets_ls = ['BIL']
+        regex = [f'^{sym}$' for sym in risky_assets_ls + safe_assets_ls]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        weights_ls = [.45,.28,.27]
+        weights_ls = weights(weights_ls, universe_df[risky_assets_ls])
+        risky_assets_allocation_df = pd.DataFrame(index=returns_df.index, columns=risky_assets_ls, data=weights_ls)
+        spy_efa_bil_returns_12M_df = universe_df[['SPY','EFA','BIL']].apply(lambda x:np.log(x/x.shift(12)))
+        spy_bil_s = spy_efa_bil_returns_12M_df.SPY>spy_efa_bil_returns_12M_df.BIL
+        spy_efa_s = spy_efa_bil_returns_12M_df.SPY>spy_efa_bil_returns_12M_df.EFA
+        signals_dd = {'SPY':(spy_bil_s*spy_efa_s).astype(int),\
+                      'EFA':spy_bil_s*(1-spy_efa_s),\
+                      'AGG':1-spy_bil_s}
+        signals_df = pd.DataFrame(signals_dd)
+        weights_df = risky_assets_allocation_df.mul(signals_df)
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
     @staticmethod
     def quint_switching_filtered(df):
@@ -579,7 +600,6 @@ class TacticalAllocation:
         weights_df = weights_df.mul(signals_df)
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
-
 
     @staticmethod
     def composite_dual_momentum(df):
@@ -749,7 +769,7 @@ if __name__ == '__main__':
     #query = data_obj.write_query_price()
     #df = data_obj.query(query, set_index=True)
     #allocation_obj = TacticalAllocation()
-    #allocation_obj.quint_switching_filtered(df)
+    #allocation_obj.gem_dual_momentum(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
