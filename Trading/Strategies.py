@@ -30,6 +30,11 @@ def momentum_score(df):
     df_copy = df_copy - 19
     return df_copy
 
+def momentum_score_sma(df):
+    df_copy = df.apply(lambda x: (x/x.shift(12))-1)
+    return df_copy
+
+
 def equity_curve(returns_df,weights_df):
     weights_df = weights_df.shift()
     equity_curve_df = pd.DataFrame((weights_df.mul(returns_df).sum(axis=1)+1).cumprod())
@@ -436,7 +441,7 @@ class TacticalAllocation:
             series_s = temp_df['SPY']>temp_df['AGG']
             returns_lookback_dd[f'{i}_months'] = series_s
         returns_lookback_df = pd.DataFrame(returns_lookback_dd)
-        spy_agg_df = returns_lookback_df.apply(lambda x:x.value_counts(True),axis=1)#/returns_lookback_df.shape[1]
+        spy_agg_df = returns_lookback_df.apply(lambda x:x.value_counts(False),axis=1)#/returns_lookback_df.shape[1]
         dd = {'SPY':np.where(returns_df.SPY > returns_df.AGG, True, False),\
               'EFA':np.where(returns_df.SPY < returns_df.AGG, True, False)}
 
@@ -522,8 +527,8 @@ class TacticalAllocation:
         returns_df = returns(universe_df)
         weights_df = pd.DataFrame(index=returns_df.index, columns=returns_df.columns)
         momentum_score_df = momentum_score(universe_df)
-        canary_assets_positive_score_s = 2*(momentum_score_df[canary_assets_ls] > 0).apply(lambda x: x.value_counts(True),\
-                                                                                           axis=1)[True]
+        canary_assets_positive_score_s = \
+            2*(momentum_score_df[canary_assets_ls] > 0).apply(lambda x: x.value_counts(False),axis=1)[True]
         canary_assets_positive_score_s = canary_assets_positive_score_s.fillna(0)
         for date, series_s in momentum_score_df.iterrows():
             n = canary_assets_positive_score_s[date]
@@ -537,10 +542,70 @@ class TacticalAllocation:
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
+    @staticmethod
+    def gem_dual_momentum(df):
+        pass
+
+    @staticmethod
+    def quint_switching_filtered(df):
+        pass
+
+    @staticmethod
+    def composite_dual_momentum(df):
+        pass
+
+    @staticmethod
+    def trend_is_our_friend(df):
+        pass
+
+    @staticmethod
+    def kipnis_defensive_adaptive_asset_allocation(df):
+        pass
+
+    @staticmethod
+    def adaptive_asset_allocation(df):
+        pass
+
+    @staticmethod
+    def protective_asset_allocation(df):
+        """
+            51% IEF, 6% IWM, 6% QQQ, 5% VNQ, 5% SPY, 5% VGK, 5% EEM, 4% EWJ, 3% DBC,\
+            3% TLT, 3% GLD, 2% HYG and 2% LQD
+        """
+        risky_assets_ls = ['IWM','QQQ','VNQ','SPY','VGK','EEM','EWJ','DBC','TLT','GLD','HYG','LQD']
+        safe_assets_ls = ['IEF']
+        weights_ls = [.51,.06,.06,.05,.05,.05,.05,.04,.03,.03,.03,.02,.02]
+        regex = [f'^{sym}$' for sym in safe_assets_ls+risky_assets_ls]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        try:
+            assert sum(weights_ls) == 1
+        except AssertionError:
+            if abs(1 - sum(weights_ls)) < 1e-8:
+                pass
+        weights_ls = weights(weights_ls,returns_df[safe_assets_ls+risky_assets_ls])
+        weights_df = pd.DataFrame(index=returns_df.index, columns=safe_assets_ls+risky_assets_ls, \
+                                  data=weights_ls).shift()
+        signals_df = pd.DataFrame(index=returns_df.index,columns=safe_assets_ls+risky_assets_ls)
+        momentum_score_sma_df = momentum_score_sma(universe_df[risky_assets_ls])
+        positive_n_score_s = (momentum_score_sma_df>0).apply(lambda x:x.value_counts(False),axis=1)[True]
+        for date,series_s in momentum_score_sma_df.iterrows():
+            risky_assets_highest_score = series_s[risky_assets_ls].sort_values(ascending=False)
+            n = positive_n_score_s[date]
+            if n <= 6:
+                signals_df.loc[date,safe_assets_ls] = 1
+            if n >= 7:
+                safe_assets_portion = (12-n)/6
+                signals_df.loc[date,safe_assets_ls] = safe_assets_portion
+                signals_df.loc[date,risky_assets_highest_score.index.tolist()] = (1-((12-n)/6))/6
+        weights_df = weights_df.mul(signals_df)
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
 
 
-    # @staticmethod
+                # @staticmethod
     # def generalised_protective_momentum(df):
     #     """
     #         Risk:  SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, DBC, GLD, HYG, and LQD
@@ -555,9 +620,6 @@ class TacticalAllocation:
     #     ri_df = (universe_df.pct_change(periods=1)+universe_df.pct_change(periods=3)\
     #              +universe_df.pct_change(periods=6)+universe_df.pct_change(periods=12))#.apply(lambda x:x.mean())
     #     pdb.set_trace()
-
-
-
 
 
 
@@ -652,10 +714,10 @@ if __name__ == '__main__':
     #df = data_obj.query(query,set_index=True)
     #port_obj.equity_curves_aggregate()
     #pdb.set_trace()
-    #query = data_obj.write_query_price()
-    #df = data_obj.query(query, set_index=True)
-    #allocation_obj = TacticalAllocation()
-    #allocation_obj.defensive_asset_allocation(df)
+    query = data_obj.write_query_price()
+    df = data_obj.query(query, set_index=True)
+    allocation_obj = TacticalAllocation()
+    allocation_obj.protective_asset_allocation(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
