@@ -353,7 +353,7 @@ class TacticalAllocation:
                 pass
         weights_ls = weights(weights_ls,returns_df[risky_assets_ls])
         weights_df = pd.DataFrame(index=returns_df.index,columns=risky_assets_ls,\
-                                  data=weights_ls).shift()
+                                  data=weights_ls)
         risky_assets_allocation_df = weights_df.mul((universe_df > universe_df.rolling(window=10).mean()))
         cash_allocation_s = (universe_df>universe_df.rolling(window=10).mean()).apply(lambda x:x.value_counts(False),\
                                                                                       axis=1)[False]*0.2
@@ -548,7 +548,38 @@ class TacticalAllocation:
 
     @staticmethod
     def quint_switching_filtered(df):
-        pass
+        """
+            75% IEF, 10% QQQ, 8% EEM, 4% EFA, 2% TLT, 1% SPY
+        """
+        risky_assets_ls = ['QQQ','EEM','EFA','TLT','SPY']
+        safe_assets_ls = ['IEF']
+        regex = [f'^{sym}$' for sym in risky_assets_ls + safe_assets_ls]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        weights_ls = [.75,.1,.08,.04,.02,.1]
+        try:
+            assert sum(weights_ls) == 1
+        except AssertionError:
+            if abs(1 - sum(weights_ls)) < 1e-8:
+                pass
+        weights_ls = weights(weights_ls,returns_df)
+        weights_df = pd.DataFrame(index=returns_df.index,columns=safe_assets_ls+risky_assets_ls,\
+                                  data=weights_ls)
+        signals_df = pd.DataFrame(index=returns_df.index,columns=returns_df.columns)
+        returns_risky_assets_3M_df = universe_df[risky_assets_ls].apply(lambda x:np.log(x/x.shift(3)))
+        returns_risky_assets_negative_3M_s = \
+            (returns_risky_assets_3M_df>0).apply(lambda x:x.value_counts(),axis=1)[False]
+        for date,series_s in returns_risky_assets_3M_df.iterrows():
+            n = returns_risky_assets_negative_3M_s[date]
+            if n > 0:
+                signals_df.loc[date,safe_assets_ls] = 1
+            if n == len(risky_assets_ls):
+                signals_df.loc[date,series_s.sort_values(ascending=False).index[0]] = 1
+        weights_df = weights_df.mul(signals_df)
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
+
 
     @staticmethod
     def composite_dual_momentum(df):
@@ -606,6 +637,7 @@ class TacticalAllocation:
 
 
                 # @staticmethod
+
     # def generalised_protective_momentum(df):
     #     """
     #         Risk:  SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, DBC, GLD, HYG, and LQD
@@ -714,10 +746,10 @@ if __name__ == '__main__':
     #df = data_obj.query(query,set_index=True)
     #port_obj.equity_curves_aggregate()
     #pdb.set_trace()
-    query = data_obj.write_query_price()
-    df = data_obj.query(query, set_index=True)
-    allocation_obj = TacticalAllocation()
-    allocation_obj.protective_asset_allocation(df)
+    #query = data_obj.write_query_price()
+    #df = data_obj.query(query, set_index=True)
+    #allocation_obj = TacticalAllocation()
+    #allocation_obj.quint_switching_filtered(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
