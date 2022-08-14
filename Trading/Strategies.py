@@ -603,7 +603,44 @@ class TacticalAllocation:
 
     @staticmethod
     def composite_dual_momentum(df):
-        pass
+        """
+            25% Equities: SPY and EFA
+            25% Real Estate: VNQ and REM
+            25% Stress: GLD and TLT
+            25% Bonds: HYG and LQD
+            https://allocatesmartly.com/antonaccis-composite-dual-momentum/
+
+        """
+        equities_assets_ls = ['SPY','EFA']
+        real_estate_assets_ls = ['VNQ', 'REM']
+        stress_assets_ls = ['GLD', 'TLT']
+        bonds_assets_ls = ['HYG', 'LQD']
+        asset_classes_dd = {'equities':equities_assets_ls,'real_estate':real_estate_assets_ls,\
+                            'stress':stress_assets_ls,'bonds':bonds_assets_ls}
+        regex = [f'^{sym}$' for sym in \
+        equities_assets_ls + real_estate_assets_ls + stress_assets_ls + bonds_assets_ls + ['BIL']]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        returns_assets_12M_df = universe_df.apply(lambda x:np.log(x/x.shift(12)))
+        returns_bil_12M_s = returns_assets_12M_df.pop('BIL')
+        risky_assets_allocation_df = pd.DataFrame(index=returns_df.index,\
+        columns=equities_assets_ls+real_estate_assets_ls+stress_assets_ls+bonds_assets_ls)
+        safe_asset_allocation_s = pd.DataFrame(index=returns_df.index,columns=list(asset_classes_dd.keys()))
+        returns_df = returns(universe_df)
+        for asset_class,sym_ls in asset_classes_dd.items():
+            temp_12M_df = returns_assets_12M_df[sym_ls]
+            signals_asset_class_df = pd.DataFrame(data={sym_ls[0]:temp_12M_df[sym_ls[0]]>temp_12M_df[sym_ls[1]],\
+                                                        sym_ls[1]:temp_12M_df[sym_ls[0]]<temp_12M_df[sym_ls[1]]})
+            asset_class_bil_df = universe_df[sym_ls].gt(returns_bil_12M_s,axis=0)
+            risky_assets_allocation_df[sym_ls] = .25*signals_asset_class_df.mul(asset_class_bil_df)
+            temp_condition_df = asset_class_bil_df.apply(lambda x:x.value_counts(),axis=1).fillna(0)
+            safe_asset_allocation_s[asset_class] = (temp_condition_df[False]>temp_condition_df[True]).astype(int)
+        safe_asset_allocation_s = .25*safe_asset_allocation_s.sum(axis=1)
+        safe_asset_allocation_s.name = 'BIL'
+        weights_df = risky_assets_allocation_df.join(safe_asset_allocation_s,how='left')
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
     @staticmethod
     def trend_is_our_friend(df):
@@ -656,8 +693,8 @@ class TacticalAllocation:
 
 
 
-                # @staticmethod
-
+    # @staticmethod
+    
     # def generalised_protective_momentum(df):
     #     """
     #         Risk:  SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, DBC, GLD, HYG, and LQD
@@ -769,7 +806,7 @@ if __name__ == '__main__':
     #query = data_obj.write_query_price()
     #df = data_obj.query(query, set_index=True)
     #allocation_obj = TacticalAllocation()
-    #allocation_obj.gem_dual_momentum(df)
+    #allocation_obj.composite_dual_momentum(df)
     #port_obj = PortfolioStrategies(allocation_obj,df)
     #port_obj.equity_curves_aggregate()
 
