@@ -10,7 +10,8 @@ from scipy.optimize import minimize
 from itertools import chain
 import pickle
 import os
-
+from pathlib import Path
+import pdb
 
 data_obj = Data()
 
@@ -882,7 +883,7 @@ class PortfolioStrategies:
 
     @staticmethod
     def to_pickle(dd,object):
-        path = os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore')
+        path = os.path.abspath(path=Path('./DataStore'))
         pickle_out = open(f'{path}/{type(object).__name__}.pickle','wb')
         pickle.dump(dd,pickle_out)
         pickle_out.close()

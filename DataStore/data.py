@@ -9,15 +9,13 @@ from Logger import Logs
 import sqlite3 as sql
 import numpy as np
 import os
+from pathlib import Path
 
 
 class Data:
 
-
-    dbname = os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore/etfs.db')
-    conn_obj = sql.connect(dbname,check_same_thread=False)
     log_obj = Logs()
-    tiingo_config_obj = TiingoConfig(os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/Config/config_platform.json'))
+
     universe_ls = ['SHY','TLT','VTI','IWN','GLD','BNDX','LQD','VEU','VNQ','SPY','TIP','DBC',\
     'EFA','EEM','BIL','IEF','DLS','AGG','IWD','IWM','EFV','SCZ','HYG','NEAR','QQQ','MTUM','IWB','IEFA',\
     'DWAS','BWX','VGK','EWJ','REM','RWX']
@@ -26,8 +24,20 @@ class Data:
         self.startDate = startDate - relativedelta(years=25)
         self.startDate = self.startDate.strftime(format='%Y-%m-%d')
         self.endDate = datetime.today().strftime(format='%Y-%m-%d')
+        try:
+            self.conn_obj = sql.connect(database=Path(f'{os.curdir}/DataStore/etfs.db'),check_same_thread=False)
+        except sql.OperationalError:
+            self.conn_obj = sql.connect(database=Path('../DataStore/etfs.db'),check_same_thread=False)
+        try:
+            self.tiingo_config_obj = TiingoConfig(Path(f'{os.curdir}/Config/config_platform.json'))
+        except FileNotFoundError:
+            self.tiingo_config_obj = TiingoConfig(Path('../Config/config_platform.json'))
+
 
     def simulation(self,columns_ls=universe_ls,freq='M'):
+        """
+            Dummy method used to generate a dataframe with random numbers normally distributed (proof of concept).
+        """
         index_ls = pd.date_range(start=self.startDate, end=self.endDate)
         simulation_df = pd.DataFrame(columns=columns_ls,\
                                      index=index_ls,\
@@ -83,7 +93,7 @@ class Data:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             results = []
             for sym in universe_ls:
-                results.append(executor.submit(query,sym,Data.tiingo_config_obj.api,freq))
+                results.append(executor.submit(query, sym, self.tiingo_config_obj.api, freq))
             for f in concurrent.futures.as_completed(results):
                 try:
                     msg = f'[FETCHING]: {f.result().upper()} price data has been retrieved @ {Data.log_obj.now_date()}.\n'
@@ -95,7 +105,7 @@ class Data:
         historical_data_df.index = pd.to_datetime(historical_data_df.index)
         first_valid_date_for_all = historical_data_df.apply(lambda x:pd.Series.first_valid_index(x)).sort_values()
         historical_data_df = historical_data_df.loc[first_valid_date_for_all[-1]:,:]
-        historical_data_df.to_sql(con=Data.conn_obj,name='price',if_exists='replace')
+        historical_data_df.to_sql(con=self.conn_obj,name='price',if_exists='replace')
         msg = f'[INSERTION]: ETF prices data ahas been inserted into the database @ {Data.log_obj.now_date()}.\n'
         Data.log_obj.log_msg(msg)
 
@@ -134,7 +144,7 @@ class Data:
         return query
 
     def query(self,query,melt=False,set_index=False):
-        df = pd.read_sql(sql=query,con=Data.conn_obj)
+        df = pd.read_sql(sql=query,con=self.conn_obj)
         if melt:
             df = pd.melt(df,id_vars='index',var_name='strategy',value_name='equity_curve')
         if set_index:
@@ -143,7 +153,7 @@ class Data:
         return df
 
     def close(self):
-        Data.conn_obj.close()
+        self.conn_obj.close()
 
 
 if __name__ == '__main__':

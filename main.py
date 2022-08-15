@@ -3,19 +3,50 @@ import plotly.express as px
 from DataStore import Data
 from dash import Dash, Output, Input, dcc, html
 from plotly.subplots import make_subplots
+from Trading import BuyAndHold, TacticalAllocation, PortfolioStrategies
+from Backtest import Table
 import os
 import pickle
 import pandas as pd
+from pathlib import Path
+import asyncio
+import pdb
+
+
+async def update(allocations=['buy_and_hold', 'tactical_allocation']):
+    query = data_obj.write_query_price()
+    df = data_obj.query(query, set_index=True)
+    for allocation in allocations:
+        if allocation == 'buy_and_hold':
+            allocation_obj = BuyAndHold()
+        if allocation == 'tactical_allocation':
+            allocation_obj = TacticalAllocation()
+        table_returns = '_'.join((allocation, 'returns'))
+        table_performance = '_'.join((allocation, 'performance'))
+        portfolio_strat_obj = PortfolioStrategies(allocation_obj, df)
+        equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
+        equity_curves_df['average'] = equity_curves_df.sum(axis=1) / equity_curves_df.shape[1]
+        portfolio_strat_obj.insertion(equity_curves_df, allocation_obj, table=allocation)
+        portfolio_strat_obj.insertion(equity_curves_df - 1, allocation_obj, table=table_returns)
+        query = data_obj.write_query_returns(allocation=allocation)
+        returns_df = data_obj.query(query, set_index=True)
+        returns_df.index.name = 'time'
+        perf_obj = Table(returns_df)
+        perf_df = perf_obj.table_aggregate()
+        portfolio_strat_obj.insertion(perf_df, allocation_obj, table=table_performance)
+        rolling_perf_dd = perf_obj.rolling_aggregate()
+        portfolio_strat_obj.to_pickle(rolling_perf_dd, allocation_obj)
+    await asyncio.sleep(3600)
 
 app = Dash(__name__)
 data_obj = Data()
 
 strategy_dd = {'buy_and_hold':'BuyAndHold',
                'tactical_allocation':'TacticalAllocation'}
-path_pickle = os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore')
+root = Path(__file__).parent
+path_pickle = os.path.relpath(path='DataStore',start=root)
 allocation_query = data_obj.write_query_allocation()
 allocation_ls = data_obj.query(query=allocation_query).name.tolist()
-
 app.layout = html.Div([html.H1('Asset Allocation Baskets - Dashboard',style={'text-align':'center','padding': '10px'}),\
                        dcc.RadioItems(id='allocation',options=allocation_ls,value=allocation_ls[0],\
                                       inputStyle={'margin': '10px'},style={'text-align': 'left'}),\
@@ -27,6 +58,7 @@ app.layout = html.Div([html.H1('Asset Allocation Baskets - Dashboard',style={'te
                        html.H2('Indivdual strategy',style={'text-align':'left'}),\
                        dcc.Dropdown(id='strategy',value='average'),\
                        dcc.Graph(id='layout_individual')],style={'font-family':'verdana','margin': '20px'})
+
 
 @app.callback(
     Output(component_id='layout_aggregate',component_property='children'),
@@ -99,6 +131,8 @@ def strategy_layout(allocation,strategy):
 
     return fig
 
+
 if __name__ == '__main__':
+    asyncio.run(update())
     app.run_server(debug=True,port=8051)
 
