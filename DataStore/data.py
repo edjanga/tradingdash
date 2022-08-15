@@ -6,7 +6,6 @@ from datetime import datetime
 import time
 from dateutil.relativedelta import relativedelta
 from Logger import Logs
-import pdb
 import sqlite3 as sql
 import numpy as np
 import os

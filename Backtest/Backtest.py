@@ -3,7 +3,6 @@ import numpy as np
 import concurrent.futures
 from DataStore import Data
 import inspect
-from Logger import Logs
 from scipy.stats import skew,kurtosis
 import pdb
 from empyrical import conditional_value_at_risk
@@ -23,7 +22,6 @@ class Performance:
     def returns(df):
         t = (df.index[-1] - df.index[0]).days / 365.25
         return (df+1).apply(lambda x,t: (x[-1] / x[0]) ** (1 /t) - 1,args=[t])
-
 
     @staticmethod
     def vol(df):
@@ -98,8 +96,6 @@ class Performance:
 
 class Table(Performance):
 
-    log_obj = Logs()
-
     def __init__(self,df):
         self.df = df
         methods_ls = inspect.getmembers(Performance,predicate=inspect.isfunction)
@@ -118,13 +114,6 @@ class Table(Performance):
             results = []
             for metric in self.metric_name:
                 results.append(executor.submit(add_performance_metrics,metric,self.df))
-            for f in concurrent.futures.as_completed(results):
-                try:
-                    msg = f'[COMPUTATION]: {f.__name__} metric is being computed @ \
-                            {Table.log_obj.now_date()}.\n'
-                    Table.log_obj.log_msg(msg)
-                except AttributeError:
-                    continue
         aggregate_perf_df = pd.concat(aggregate_perf_dd, axis=1).droplevel(1, 1).round(4)
         return aggregate_perf_df
 
@@ -141,13 +130,6 @@ class Table(Performance):
             results = []
             for metric in self.rolling_name:
                 results.append(executor.submit(add_rolling_metrics,metric,self.df))
-            for f in concurrent.futures.as_completed(results):
-                try:
-                    msg = f'[COMPUTATION]: {f.__name__} metric is being computed @ \
-                            {Table.log_obj.now_date()}.\n'
-                    Table.log_obj.log_msg(msg)
-                except AttributeError:
-                    continue
         return aggregate_roll_dd
 
 

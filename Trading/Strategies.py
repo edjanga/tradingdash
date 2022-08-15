@@ -21,7 +21,7 @@ def returns(df,annualised=False):
         return np.log(df/df.shift())
 
 def weights(weights_ls,df):
-    weights_ls = [weights_ls * df.shape[0]]#[weights_ls * (df.shape[0]+df.shape[1])]
+    weights_ls = [weights_ls * df.shape[0]]
     weights_ls = np.reshape(np.array(weights_ls), newshape=(df.shape[0],df.shape[1]))
     return weights_ls
 
@@ -33,7 +33,6 @@ def momentum_score(df):
 def momentum_score_sma(df):
     df_copy = df.apply(lambda x: (x/x.shift(12))-1)
     return df_copy
-
 
 def equity_curve(returns_df,weights_df):
     weights_df = weights_df.shift()
