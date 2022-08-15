@@ -2,12 +2,12 @@ import pandas as pd
 import inspect
 from DataStore import Data
 import concurrent.futures
-import pdb
 from Logger import Logs
 import numpy as np
 from datetime import datetime
 from Backtest import Table
-from Backtest import Performance
+from scipy.optimize import minimize
+from itertools import chain
 import pickle
 import os
 
@@ -306,7 +306,7 @@ class BuyAndHold:
         """
             30% SPY, 40% TLT, 15% IEF, 7.5% GLD, 7.5% DBC
         """
-        universe_df = df.filter(regex=r'(SPY$|$TLT$|IEF$|GLD$|DBC$)')
+        universe_df = df.filter(regex=r'(^SPY$|^TLT$|^IEF$|^GLD$|^DBC$)')
         returns_df = returns(universe_df)
         weights_ls = [.3,.4,.15,.075,.075]
         try:
@@ -644,15 +644,131 @@ class TacticalAllocation:
 
     @staticmethod
     def trend_is_our_friend(df):
-        pass
+        """
+            20% Equities, 26% Bonds, and 54% Cash, Commodities and Real Estate
+        """
+        universe_dd = {'equities':['SPY'],\
+                       'bonds':['BIL'],\
+                       'CCRE':['NEAR','VNQ','DBC']}
+        assets_ls = list(universe_dd.items())
+        assets_ls = list(chain(*[pair[-1] for pair in assets_ls]))
+        regex = [f'^{sym}$' for sym in assets_ls]
+        regex = ''.join(('(','|'.join(regex),')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        assets_ls.remove('NEAR')
+        query = data_obj.write_query_symbol(symbol='BIL')
+        bil_s = data_obj.query(query,set_index=True)['BIL']
+        bil_s = np.log(bil_s/bil_s.shift())
+        vol_df = universe_df.apply(lambda x:np.log(x/x.shift())).rolling(18).std()
+        vol_df = vol_df.drop('NEAR',axis=1)
+        vol_df = vol_df.subtract(bil_s,axis=0)
+        universe_10M_df = universe_df.rolling(10).mean()
+        signals_df = (universe_df>universe_10M_df).astype(int)
+        signals_df = signals_df.reset_index()
+        signals_df = signals_df.drop('NEAR',axis=1)
+        weights_df = pd.DataFrame(index=returns_df.index,columns=assets_ls)
+        for idx,series_s in signals_df.iterrows():
+            if idx>=18:
+                date = series_s.pop('index')
+                series_vol_s = vol_df.loc[date, :]
+                k = 1/sum(series_vol_s**(-1))
+                weights_ls = k*(1/series_vol_s)
+                weights_df.loc[date,series_vol_s.index.tolist()] = weights_ls
+        signals_df = signals_df.set_index('index')
+        weights_df = weights_df.mul(signals_df)
+        weights_df['NEAR'] = 1-weights_df.sum(axis=1)
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
     @staticmethod
     def kipnis_defensive_adaptive_asset_allocation(df):
-        pass
+        """
+             Investment Universe: SPY, VGK, EWJ, EEM, VNQ, RWX, IEF, TLT, DBC, and GLD
+             Crash Protection: IEF and Cash (NEAR)
+             Canary: EEM and AGG
+        """
+        investment_universe_ls = ['SPY', 'VGK', 'EWJ', 'EEM', 'VNQ', 'RWX', 'TLT', 'DBC', 'GLD']
+        crash_protection_ls = ['IEF','NEAR']
+        canary_ls = ['EEM','AGG']
+        regex = [f'^{sym}$' for sym in investment_universe_ls + crash_protection_ls + canary_ls]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df[investment_universe_ls+crash_protection_ls])
+        momentum_score_df = momentum_score(universe_df).reset_index()
+        canary_assets_positive_score_s = (momentum_score_df[canary_ls]>0).apply(lambda x:x.value_counts(),axis=1)
+        canary_assets_positive_score_s.index = returns_df.index
+        canary_assets_positive_score_s = canary_assets_positive_score_s.fillna(0)
+        canary_assets_positive_score_s[True] = 2-canary_assets_positive_score_s[False]
+        canary_assets_positive_score_s = canary_assets_positive_score_s[True]
+        ief_near_momentum_dd = {'IEF':(momentum_score_df[crash_protection_ls].apply(lambda x:x['IEF']>x['NEAR'],\
+        axis=1)).astype(int),\
+        'NEAR':(momentum_score_df[crash_protection_ls].apply(lambda x:x['IEF']<x['NEAR'],axis=1)).astype(int)}
+        ief_near_momentum_df = pd.DataFrame(ief_near_momentum_dd)
+        ief_near_momentum_df.index = returns_df.index
+        ief_near_momentum_df.loc[:12,'NEAR'] = 1
+        weights_df = pd.DataFrame(index=returns_df.index,columns=investment_universe_ls)
+        for idx,series_s in momentum_score_df.iterrows():
+            if idx>12:
+                date = series_s.pop('index')
+                factor = 1-.5*canary_assets_positive_score_s[date]
+                investment_universe_top_momentum = \
+                    (series_s[investment_universe_ls].sort_values(ascending=False) > 0)
+                if investment_universe_top_momentum.sum()>=5:
+                    top5_investment_universe_ls = investment_universe_top_momentum.index[:5]
+                else:
+                    top5_investment_universe_ls =\
+                        investment_universe_top_momentum.index[:investment_universe_top_momentum.sum()]
+                cov_df = \
+                    ((12*universe_df.loc[:date,top5_investment_universe_ls.tolist()].pct_change().cov()).add(\
+                    3*universe_df.loc[:date,top5_investment_universe_ls.tolist()].pct_change(4).cov())).add(\
+                        universe_df.loc[:date,top5_investment_universe_ls.tolist()].pct_change(12).cov())
+                cov_df = (1/19)*cov_df
+                weights_ls = np.array([1/len(cov_df.index)]*len(cov_df.index))
+                res = minimize(fun=lambda x,cov:np.dot(x,np.dot(cov,np.transpose(x))),\
+                               x0=weights_ls,args=(cov_df),constraints={'type':'eq',\
+                                                                        'fun':lambda x:sum(x)-1})
+                weights_ls = list(res.x)
+                weights_df.loc[date,top5_investment_universe_ls.tolist()] = weights_ls
+                weights_df.loc[date,top5_investment_universe_ls.tolist()] = factor*weights_df.loc[date,\
+                                                                        top5_investment_universe_ls.tolist()]
+                ief_near_momentum_df.loc[date,:] = factor*ief_near_momentum_df.loc[date,:]
+        ief_near_momentum_df.loc[:,'NEAR'] = np.where(weights_df.sum(axis=1)>=ief_near_momentum_df.loc[:,'NEAR'],0,1)
+        weights_df = weights_df.join(ief_near_momentum_df, how='left')
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
     @staticmethod
     def adaptive_asset_allocation(df):
-        pass
+        """
+            IEF,SPY,VNQ,RWX,DBC,EEM,VGK,TLT,GLD,EWJ and NEAR
+        """
+        universe_assets_ls = ['IEF','SPY','VNQ','RWX','DBC','EEM','VGK','TLT','GLD','EWJ','NEAR']
+        risk_assets_ls = universe_assets_ls[::]
+        risk_assets_ls.remove('NEAR')
+        regex = [f'^{sym}$' for sym in universe_assets_ls]
+        regex = ''.join(('(', '|'.join(regex), ')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        weights_df = pd.DataFrame(index=returns_df.index,columns=universe_df.columns)
+        risky_assets_returns_6M_df = universe_df[risk_assets_ls].apply(lambda x:np.log(x/x.shift(6)))
+        risky_assets_returns_6M_df = risky_assets_returns_6M_df.reset_index()
+        for idx, series_s in risky_assets_returns_6M_df.iterrows():
+            if idx >= 6:
+                date = series_s.pop('index')
+                five_assets_ls = series_s.sort_values(ascending=False).index[:5].tolist()
+                cov_df = returns_df[five_assets_ls].rolling(2).cov().loc[date, :]
+                if weights_df.loc[weights_df.index[idx-1],five_assets_ls].sum() < 5:
+                    weights_x0_ls = [1/cov_df.shape[0]] * cov_df.shape[0]
+                else:
+                    weights_x0_ls = weights_df[five_assets_ls].iloc[idx-1,:]
+                res = minimize(lambda x,cov: np.dot(x,np.dot(cov,np.transpose(x))),\
+                x0=weights_x0_ls,args=(cov_df),constraints={'type':'eq','fun':lambda x:sum(x)-1})
+                weights_ls = list(res.x)
+                weights_df.loc[date,five_assets_ls] = weights_ls
+        weights_df['NEAR'] = 1 - weights_df.sum(axis=1)
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
     @staticmethod
     def protective_asset_allocation(df):
@@ -691,26 +807,39 @@ class TacticalAllocation:
         equity_curve_df = equity_curve(returns_df, weights_df)
         return equity_curve_df
 
-
-
-    # @staticmethod
-    
-    # def generalised_protective_momentum(df):
-    #     """
-    #         Risk:  SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, DBC, GLD, HYG, and LQD
-    #         Safety: BIL, IEF
-    #     """
-    #     risky_assets_ls = ['SPY','QQQ','IWM','VGK','EWJ','EEM','VNQ','DBC','GLD','HYG','LQD']
-    #     safety_assets_ls = ['BIL','IEF']
-    #     regex = [f'^{sym}$' for sym in risky_assets_ls+safety_assets_ls]
-    #     regex = ''.join(('(','|'.join(regex),')'))
-    #     universe_df = df.filter(regex=f'{regex}')
-    #     returns_df = returns(universe_df)
-    #     ri_df = (universe_df.pct_change(periods=1)+universe_df.pct_change(periods=3)\
-    #              +universe_df.pct_change(periods=6)+universe_df.pct_change(periods=12))#.apply(lambda x:x.mean())
-    #     pdb.set_trace()
-
-
+    @staticmethod
+    def generalised_protective_momentum(df):
+        """
+            Risk:  SPY, QQQ, IWM, VGK, EWJ, EEM, VNQ, DBC, GLD, HYG, and LQD
+            Safety: BIL, IEF
+        """
+        risky_assets_ls = ['SPY','QQQ','IWM','VGK','EWJ','EEM','VNQ','DBC','GLD','HYG','LQD']
+        safety_assets_ls = ['BIL','IEF']
+        regex = [f'^{sym}$' for sym in risky_assets_ls+safety_assets_ls]
+        regex = ''.join(('(','|'.join(regex),')'))
+        universe_df = df.filter(regex=f'{regex}')
+        returns_df = returns(universe_df)
+        returns_df['weighted_risk_assets'] = returns_df[risky_assets_ls].sum(axis=1)
+        ri_df = (universe_df.pct_change(periods=1)+universe_df.pct_change(periods=3)\
+                 +universe_df.pct_change(periods=6)+universe_df.pct_change(periods=12))
+        ci_df = returns_df.rolling(12).cov()
+        ci_weighted_risk_assets_df = ci_df.loc[ci_df.index.get_level_values(1)=='weighted_risk_assets',:]
+        weights_df = pd.DataFrame(index=universe_df.index,columns=universe_df.columns)
+        ci_weighted_risk_assets_df.index = ci_weighted_risk_assets_df.index.droplevel(1)
+        ci_weighted_risk_assets_df = ci_weighted_risk_assets_df.drop('weighted_risk_assets',axis=1)
+        n_positive_score_s = (((1-ci_weighted_risk_assets_df)*ri_df)>0).sum(axis=1)
+        for date,series_s in ci_weighted_risk_assets_df.iterrows():
+            n = n_positive_score_s[date]
+            if n<=6:
+                highest_score_safe_asset = series_s[safety_assets_ls].sort_values(ascending=False).index[0]
+                weights_df.loc[date,highest_score_safe_asset] = 1
+            else:
+                top3_highest_score_risky_assets_ls = series_s[risky_assets_ls].sort_values(ascending=False).index[:3]
+                weights_df.loc[date, highest_score_safe_asset] = (12-n)/6
+                remaining_portion = (12-n)/6
+                weights_df.loc[date,top3_highest_score_risky_assets_ls] = remaining_portion/3
+        equity_curve_df = equity_curve(returns_df, weights_df)
+        return equity_curve_df
 
 class PortfolioStrategies:
 
@@ -733,17 +862,6 @@ class PortfolioStrategies:
             results = []
             for strategy in self.strategy_name:
                 results.append(executor.submit(add_equity_curve,strategy,self.df))
-            for f in concurrent.futures.as_completed(results):
-                try:
-                    msg = f'[COMPUTATION]: {f.__name__} equity curve is being computed @ \
-                            {PortfolioStrategies.log_obj.now_date()}.\n'
-                    PortfolioStrategies.log_obj.log_msg(msg)
-                except Exception:
-                    # msg = f'[COMPUTATION]: ERROR in {f.exception_info} equity curve computation @ \
-                    #                             {PortfolioStrategies.log_obj.now_date()}.\n'
-                    # print(msg)
-                    # PortfolioStrategies.log_obj.log_msg(msg)
-                    continue
         equity_curves_df = pd.concat(equity_curves_dd,axis=1).droplevel(1,1)
         return equity_curves_df
 
@@ -798,17 +916,8 @@ if __name__ == '__main__':
             portfolio_strat_obj.insertion(perf_df,allocation_obj,table=table_performance)
             rolling_perf_dd = perf_obj.rolling_aggregate()
             portfolio_strat_obj.to_pickle(rolling_perf_dd,allocation_obj)
-    update()#['tactical_allocation']
-    #query = data_obj.write_query_returns(allocation='buy_and_hold')
-    #df = data_obj.query(query,set_index=True)
-    #port_obj.equity_curves_aggregate()
-    #pdb.set_trace()
-    #query = data_obj.write_query_price()
-    #df = data_obj.query(query, set_index=True)
-    #allocation_obj = TacticalAllocation()
-    #allocation_obj.composite_dual_momentum(df)
-    #port_obj = PortfolioStrategies(allocation_obj,df)
-    #port_obj.equity_curves_aggregate()
+
+    update()
 
 
 

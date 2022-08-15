@@ -15,13 +15,13 @@ import os
 class Data:
 
 
-    conn_obj = sql.connect(os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore/etfs.db'),\
-                           check_same_thread=False)
+    dbname = os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore/etfs.db')
+    conn_obj = sql.connect(dbname,check_same_thread=False)
     log_obj = Logs()
     tiingo_config_obj = TiingoConfig(os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/Config/config_platform.json'))
     universe_ls = ['SHY','TLT','VTI','IWN','GLD','BNDX','LQD','VEU','VNQ','SPY','TIP','DBC',\
     'EFA','EEM','BIL','IEF','DLS','AGG','IWD','IWM','EFV','SCZ','HYG','NEAR','QQQ','MTUM','IWB','IEFA',\
-    'DWAS','BWX','VGK','EWJ','REM']
+    'DWAS','BWX','VGK','EWJ','REM','RWX']
 
     def __init__(self,startDate=datetime.now()):
         self.startDate = startDate - relativedelta(years=25)
@@ -138,7 +138,6 @@ class Data:
         df = pd.read_sql(sql=query,con=Data.conn_obj)
         if melt:
             df = pd.melt(df,id_vars='index',var_name='strategy',value_name='equity_curve')
-            #df['index'] = pd.to_datetime(df.index)
         if set_index:
             df = df.set_index('index')
             df.index = pd.to_datetime(df.index)

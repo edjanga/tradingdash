@@ -6,6 +6,7 @@ import inspect
 from Logger import Logs
 from scipy.stats import skew,kurtosis
 import pdb
+from empyrical import conditional_value_at_risk
 
 data_obj = Data()
 
@@ -53,14 +54,8 @@ class Performance:
 
     @staticmethod
     def cvar(df):
-        cvar_ls = list(map(lambda x:ep.conditional_value_at_risk(x),df.transpose().values))
+        cvar_ls = list(map(lambda x:conditional_value_at_risk(x),df.transpose().values))
         return pd.DataFrame(cvar_ls,index=df.columns)
-    #
-    # @staticmethod
-    # def calmar_ratio(df,freq='monthly'):
-    #     df_copy = Performance.returns_adjusted(df)
-    #     calmar_ratio_ls = list(map(lambda x:ep.calmar_ratio(x,period=freq),df_copy.transpose().values))
-    #     return pd.DataFrame(calmar_ratio_ls,index=df.columns)
 
     @staticmethod
     def maxdrawdown(df):
@@ -87,16 +82,18 @@ class Performance:
 
     @staticmethod
     def rolling_maxdrawdown(df,rolling_period=12):
-        return df.rolling(rolling_period).apply(Performance.maxdrawdown).dropna()
+        return np.sqrt(rolling_period)*df.rolling(rolling_period).apply(Performance.maxdrawdown).dropna()
 
     @staticmethod
     def rolling_sharpe(df,rolling_period=12):
         df_copy = Performance.returns_adjusted(df)
-        return df_copy.rolling(rolling_period).apply(lambda x:x.mean()/x.std()).dropna()
+        rolling_obj = df_copy.rolling(rolling_period)
+        df_copy = (rolling_obj.mean()).div(rolling_obj.std()).dropna()
+        return np.sqrt(rolling_period)*df_copy
 
     @staticmethod
     def rolling_vol(df,rolling_period=12):
-        return df.rolling(rolling_period).std().dropna()
+        return np.sqrt(rolling_period)*df.rolling(rolling_period).std().dropna()
 
 
 class Table(Performance):
@@ -159,10 +156,9 @@ if __name__ == '__main__':
     data_obj = Data()
     perf_obj = Performance()
     query = data_obj.write_query_returns(allocation)
-    df = data_obj.query(query,set_index=True)#.set_index('index')
+    df = data_obj.query(query,set_index=True)
     df.index.name = 'time'
-    pdb.set_trace()
-    #perf_obj.rolling_annual_vol(df)
+    perf_obj.rolling_sharpe(df)
     table_obj = Table(df)
     table_obj.returns(df)
     pdb.set_trace()

@@ -5,7 +5,6 @@ from dash import Dash, Output, Input, dcc, html
 from plotly.subplots import make_subplots
 import os
 import pickle
-import pdb
 import pandas as pd
 
 app = Dash(__name__)
@@ -17,12 +16,17 @@ path_pickle = os.path.abspath('/Users/emmanueldjanga/wifeyAlpha/DataStore')
 allocation_query = data_obj.write_query_allocation()
 allocation_ls = data_obj.query(query=allocation_query).name.tolist()
 
-app.layout = html.Div([dcc.RadioItems(id='allocation',options=allocation_ls,value=allocation_ls[0]),\
+app.layout = html.Div([html.H1('Asset Allocation Baskets - Dashboard',style={'text-align':'center','padding': '10px'}),\
+                       dcc.RadioItems(id='allocation',options=allocation_ls,value=allocation_ls[0],\
+                                      inputStyle={'margin': '10px'},style={'text-align': 'left'}),\
+                       html.H2('Equity curves, returns distribution and performance metrics',\
+                               style={'text-align':'left'}),\
                        html.Div(id='layout_aggregate',children=[]),\
                        html.Br(),\
                        html.Br(),\
+                       html.H2('Indivdual strategy',style={'text-align':'left'}),\
                        dcc.Dropdown(id='strategy',value='average'),\
-                       dcc.Graph(id='layout_individual')])
+                       dcc.Graph(id='layout_individual')],style={'font-family':'verdana','margin': '20px'})
 
 @app.callback(
     Output(component_id='layout_aggregate',component_property='children'),
@@ -32,7 +36,8 @@ def aggregate_layout(allocation):
     content_ls = []
     query = data_obj.write_query_equity_curves(allocation=allocation)
     equity_curves_aggregate_df = data_obj.query(query=query, melt=True,set_index=True).rename(index={'index': 'time'})
-    equity_curves_fig = px.line(data_frame=equity_curves_aggregate_df,y='equity_curve', color='strategy')
+    equity_curves_fig = px.line(data_frame=equity_curves_aggregate_df,y='equity_curve', color='strategy',\
+                                title='Equity curves',labels={'equity_curves':'value'})
     equity_curves_fig.add_hline(y=1)
     content_ls.append(html.Br())
     content_ls.append(dcc.Graph(figure=equity_curves_fig))
@@ -42,7 +47,7 @@ def aggregate_layout(allocation):
     strategy_returns_aggregate_df = strategy_returns_aggregate_df.rename(columns={'index':'time'})
     strategy_returns_aggregate_df.index.name = None
     distribution_returns_fig = px.histogram(data_frame=strategy_returns_aggregate_df,\
-                                            y='returns',color='strategy',labels={'x':'frequency'},marginal='violin')
+        y='returns',color='strategy',labels={'x':'frequency'},marginal='violin',title='Returns distribution')
     content_ls.append(html.Br())
     content_ls.append(dcc.Graph(figure=distribution_returns_fig))
     query = data_obj.write_query_performance(allocation=allocation)
@@ -78,16 +83,20 @@ def strategy_layout(allocation,strategy):
     for key,value in rolling_perf_dd.items():
         rolling_perf_df = pd.concat([rolling_perf_df,value[[strategy]].rename(columns={strategy:key})],axis=1)
     rolling_perf_metrics_ls = rolling_perf_df.columns.tolist()
-    fig = make_subplots(rows=len(rolling_perf_metrics_ls),cols=1,shared_xaxes=True,x_title='time')
+    fig = make_subplots(rows=len(rolling_perf_metrics_ls),cols=1,shared_xaxes=True,x_title='time',\
+                        column_titles=['Rolling metrics'])
+    col_dd = {'rolling_maxdrawdown':'red','rolling_vol':'blue','rolling_sharpe':'green'}
     for i,col in enumerate(rolling_perf_metrics_ls):
         if col == 'rolling_maxdrawdown':
             fig.add_trace(go.Scatter(x=rolling_perf_df.index,\
                                      y=rolling_perf_df[col],\
-                                     mode='lines',name=f'{col}',fill='tozeroy'),row=i+1,col=1)
+                                     mode='lines',name=f'{col}',fill='tozeroy',line=dict(color=col_dd[col])),\
+                          row=i+1,col=1)
         else:
             fig.add_trace(go.Scatter(x=rolling_perf_df.index, \
                                      y=rolling_perf_df[col], \
-                                     mode='lines', name=f'{col}'),row=i+1,col=1)
+                                     mode='lines', name=f'{col}',line=dict(color=col_dd[col])),row=i+1,col=1)
+
     return fig
 
 if __name__ == '__main__':
