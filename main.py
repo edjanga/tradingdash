@@ -10,39 +10,48 @@ import pickle
 import pandas as pd
 from pathlib import Path
 import asyncio
-import pdb
+import concurrent.futures
+import time
 
 
+data_obj = Data()
+async def insert_historical_data():
+    data_obj.insert_historical_data()
 async def update(allocations=['buy_and_hold', 'tactical_allocation']):
-    query = data_obj.write_query_price()
-    df = data_obj.query(query, set_index=True)
-    for allocation in allocations:
-        if allocation == 'buy_and_hold':
-            allocation_obj = BuyAndHold()
-        if allocation == 'tactical_allocation':
-            allocation_obj = TacticalAllocation()
-        table_returns = '_'.join((allocation, 'returns'))
-        table_performance = '_'.join((allocation, 'performance'))
-        portfolio_strat_obj = PortfolioStrategies(allocation_obj, df)
-        equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
-        equity_curves_df['average'] = equity_curves_df.sum(axis=1) / equity_curves_df.shape[1]
-        portfolio_strat_obj.insertion(equity_curves_df, allocation_obj, table=allocation)
-        portfolio_strat_obj.insertion(equity_curves_df - 1, allocation_obj, table=table_returns)
-        query = data_obj.write_query_returns(allocation=allocation)
-        returns_df = data_obj.query(query, set_index=True)
-        returns_df.index.name = 'time'
-        perf_obj = Table(returns_df)
-        perf_df = perf_obj.table_aggregate()
-        portfolio_strat_obj.insertion(perf_df, allocation_obj, table=table_performance)
-        rolling_perf_dd = perf_obj.rolling_aggregate()
-        portfolio_strat_obj.to_pickle(rolling_perf_dd, allocation_obj)
-    await asyncio.sleep(3600)
+    """
+        First insert historical data
+        Then update all trading strategies (including performance metrics)
+        Wait for one hour before the next update
+    """
+    while True:
+        await insert_historical_data()
+        query = data_obj.write_query_price()
+        df = data_obj.query(query, set_index=True)
+        for allocation in allocations:
+            if allocation == 'buy_and_hold':
+                allocation_obj = BuyAndHold()
+            if allocation == 'tactical_allocation':
+                allocation_obj = TacticalAllocation()
+            table_returns = '_'.join((allocation, 'returns'))
+            table_performance = '_'.join((allocation, 'performance'))
+            portfolio_strat_obj = PortfolioStrategies(allocation_obj, df)
+            equity_curves_df = portfolio_strat_obj.equity_curves_aggregate()
+            equity_curves_df['average'] = equity_curves_df.sum(axis=1) / equity_curves_df.shape[1]
+            portfolio_strat_obj.insertion(equity_curves_df, allocation_obj, table=allocation)
+            portfolio_strat_obj.insertion(equity_curves_df - 1, allocation_obj, table=table_returns)
+            query = data_obj.write_query_returns(allocation=allocation)
+            returns_df = data_obj.query(query, set_index=True)
+            returns_df.index.name = 'time'
+            perf_obj = Table(returns_df)
+            perf_df = perf_obj.table_aggregate()
+            portfolio_strat_obj.insertion(perf_df, allocation_obj, table=table_performance)
+            rolling_perf_dd = perf_obj.rolling_aggregate()
+            portfolio_strat_obj.to_pickle(rolling_perf_dd, allocation_obj)
+        time.sleep(3600)
 
 app = Dash(__name__)
-data_obj = Data()
 
-strategy_dd = {'buy_and_hold':'BuyAndHold',
-               'tactical_allocation':'TacticalAllocation'}
+strategy_dd = {'buy_and_hold':'BuyAndHold','tactical_allocation':'TacticalAllocation'}
 root = Path(__file__).parent
 path_pickle = os.path.relpath(path='DataStore',start=root)
 allocation_query = data_obj.write_query_allocation()
@@ -133,6 +142,19 @@ def strategy_layout(allocation,strategy):
 
 
 if __name__ == '__main__':
-    asyncio.run(update())
-    app.run_server(debug=True,port=8051)
+
+    def update_in_the_background():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        loop.run_until_complete(update())
+        loop.close()
+
+    def run_app_and_update():
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = []
+            for func in [app.run_server,update_in_the_background]:
+                results.append(executor.submit(func))
+
+    run_app_and_update()
 

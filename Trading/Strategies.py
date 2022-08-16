@@ -11,9 +11,10 @@ from itertools import chain
 import pickle
 import os
 from pathlib import Path
-import pdb
+from Logger import Logs
 
 data_obj = Data()
+log_obj = Logs()
 
 def returns(df,annualised=False):
     if annualised:
@@ -872,22 +873,28 @@ class PortfolioStrategies:
         """
         df.to_sql(name=table,con=data_obj.conn_obj,if_exists='replace')
         if table in['buy_and_hold','tactical_allocation']:
-            print(f'[INSERTION]: {type(object).__name__} strategies catalog has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+            msg = f'[INSERTION]: {type(object).__name__} strategies catalog has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}'
+
 
         if 'performance' in table:
-            print(f'[INSERTION]: {type(object).__name__} performance has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+            msg = f'[INSERTION]: {type(object).__name__} performance has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}'
 
         if 'returns' in table:
-            print(
-                f'[INSERTION]: {type(object).__name__} returns has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+            msg = f'[INSERTION]: {type(object).__name__} returns has been inserted into the database @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}'
+        PortfolioStrategies.log_obj.log_msg(msg)
 
     @staticmethod
     def to_pickle(dd,object):
         path = os.path.abspath(path=Path('./DataStore'))
-        pickle_out = open(f'{path}/{type(object).__name__}.pickle','wb')
+        try:
+            pickle_out = open(f'{path}/{type(object).__name__}.pickle','wb')
+        except FileNotFoundError:
+            path = os.path.abspath(path=Path('../DataStore'))
+            pickle_out = open(f'{path}/{type(object).__name__}.pickle', 'wb')
         pickle.dump(dd,pickle_out)
         pickle_out.close()
-        print(f'[INSERTION]: {type(object).__name__} rolling performance has been created @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}')
+        msg = f'[INSERTION]: {type(object).__name__} rolling performance has been created @ {datetime.now().strftime(format="%Y-%m-%d %H:%M:%S")}'
+        PortfolioStrategies.log_obj.log_msg(msg)
 
 
 
