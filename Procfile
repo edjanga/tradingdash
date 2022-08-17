@@ -1,1 +1,1 @@
-web: gunicorn main:app_run_and_update
+web: gunicorn main:server
