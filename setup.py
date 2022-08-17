@@ -6,7 +6,7 @@ if __name__ == '__main__':
     with open("README.md", "r") as fh:
         long_description = fh.read()
 
-    setuptools.setup(name="tradingdash",\
+    setuptools.setup(name="tradingDashboard",\
           version="1.0.0",\
           author="Emmanuel Djanga",\
           author_email="emmanuel.djanga@live.be",\
