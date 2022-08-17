@@ -4,4 +4,4 @@ venv
 src/DataStore/*.db
 src/tradingDashboard/log.txt
 src/tradingDashboard/__pycache__/*
-src/tests/__pycache__/*
+tests/__pycache__/*
