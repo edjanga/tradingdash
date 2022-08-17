@@ -116,7 +116,7 @@ def strategies_dropdown(allocation):
      Input(component_id='strategy',component_property='value')]
 )
 def strategy_layout(allocation,strategy):
-    f = '.'.join((strategy_dd[allocation],'pickle'))
+    f = Path(f'src/tradingDashboard/{".".join((strategy_dd[allocation],"pickle"))}')
     pickle_in = open(f,'rb')
     rolling_perf_dd = pickle.load(pickle_in)
     pickle_in.close()

@@ -11,6 +11,7 @@ setup.py
 tox.ini
 .github/workflows/tests.yml
 .tox/.package.lock
+dist/tradingDashboard-1.0.0-py3.7.egg
 src/tradingDashboard/Backtest.py
 src/tradingDashboard/BuyAndHold.pickle
 src/tradingDashboard/Strategies.py
@@ -21,7 +22,6 @@ src/tradingDashboard/config_platform.json
 src/tradingDashboard/data.py
 src/tradingDashboard/etfs.db
 src/tradingDashboard/logger.py
-src/tradingDashboard/main.py
 src/tradingDashboard/py.typed
 src/tradingDashboard.egg-info/PKG-INFO
 src/tradingDashboard.egg-info/SOURCES.txt

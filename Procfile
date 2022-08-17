@@ -1,1 +1,1 @@
-web: gunicorn src/tradingDashboard/main:server
+web: gunicorn main:server
