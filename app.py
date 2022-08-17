@@ -156,8 +156,8 @@ if __name__ == '__main__':
             for func in [app.run_server,update_in_the_background]:
                 results.append(executor.submit(func))
 
-    #run_app_and_update()
-    app.run_server()
+
+    server = run_app_and_update()
 
 
 
