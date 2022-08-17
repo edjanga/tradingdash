@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: create_env # email-from-python.py
+      - name: create_env
         env:
           TIINGO_API: ${{ secrets.TIINGO_API }}
           TIINGO_ENDPOINT: ${{ secrets.TIINGO_ENDPOINT }}
