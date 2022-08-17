@@ -5,6 +5,6 @@ src/DataStore/*.db
 src/tradingDashboard/log.txt
 src/tradingDashboard/__pycache__/*
 tests/__pycache__/*
-.venv
+.env
 src/tradingDashboard/config.py
 src/tradingDashboard/config_platform.json
