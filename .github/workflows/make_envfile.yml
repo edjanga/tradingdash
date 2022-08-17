@@ -1,0 +1,21 @@
+name: Create envfile
+
+on: [ push ]
+
+jobs:
+
+  create-envfile:
+ 
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - name: Make envfile
+      uses: actions/checkout@v2
+      with:
+        TIINGO_ENDPOINT: ${{secrets.TIINGO_ENDPOINT}}
+	    TIINGO_API: ${{ secrets.TIINGO_API }}
+        some_other_variable: foobar
+        directory: .
+        file_name: .env
+        fail_on_empty: false
+        run: echo -e "TIINGO_API=$TIINGO_API\TIINGO_ENDPOINT=$TIINGO_ENDPOINT" > $file_name
