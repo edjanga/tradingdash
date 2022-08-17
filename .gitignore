@@ -1,9 +1,0 @@
-.DS_Store
-.idea
-venv
-src/DataStore/*.db
-src/tradingDashboard/log.txt
-src/tradingDashboard/__pycache__/*
-tests/__pycache__/*
-src/tradingDashboard/config.py
-src/tradingDashboard/config_platform.json
