@@ -156,5 +156,11 @@ if __name__ == '__main__':
             for func in [app.run_server,update_in_the_background]:
                 results.append(executor.submit(func))
 
-    run_app_and_update()
+    class App:
+        def app_run_and_update(self):
+            return run_app_and_update
+
+    App_obj = App()
+    App_obj.app_run_and_update()
+
 
