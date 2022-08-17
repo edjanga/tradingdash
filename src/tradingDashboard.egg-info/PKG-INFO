@@ -2,7 +2,7 @@ Metadata-Version: 2.1
 Name: tradingDashboard
 Version: 1.0.0
 Summary: Data visualisation displaying trading strategies performance.
-Home-page: <https://github.com/edjanga/tradingDashboard>
+Home-page: https://github.com/edjanga/tradingdash
 Author: Emmanuel Djanga
 Author-email: emmanuel.djanga@live.be
 License: MIT
@@ -20,5 +20,7 @@ Provides-Extra: testing
 License-File: LICENSE
 
 <h1>trading Dashboard</h1><br/>
-Repositary containing the source code of my web app.<br/>
+<img src="https://github.com/edjanga/tradingdash/actions/workflows/tests.yml/badge.svg">
+<br/>
+Repository containing the source code of my web app.<br/>
 

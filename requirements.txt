@@ -84,7 +84,7 @@ jupyterlab-widgets==1.1.0
 kaggle==1.5.12
 kiwisolver==1.4.4
 linearmodels==4.25
-llvmlite==0.36.0
+llvmlite>=0.36.0
 lxml==4.9.1
 MarkupSafe==2.1.1
 matplotlib==3.5.2
