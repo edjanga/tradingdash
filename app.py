@@ -51,7 +51,6 @@ async def update(allocations=['buy_and_hold', 'tactical_allocation']):
 
 app = Dash(__name__)
 server = app.server
-
 strategy_dd = {'buy_and_hold':'BuyAndHold','tactical_allocation':'TacticalAllocation'}
 root = Path(__file__).parent
 path_pickle = os.path.relpath(path='DataStore',start=root)
@@ -157,7 +156,8 @@ if __name__ == '__main__':
             for func in [app.run_server,update_in_the_background]:
                 results.append(executor.submit(func))
 
-    run_app_and_update()
+    #run_app_and_update()
+    app.run_server()
 
 
 
