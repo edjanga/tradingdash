@@ -28,10 +28,5 @@ src/tradingDashboard.egg-info/SOURCES.txt
 src/tradingDashboard.egg-info/dependency_links.txt
 src/tradingDashboard.egg-info/requires.txt
 src/tradingDashboard.egg-info/top_level.txt
-src/tradingdash.egg-info/PKG-INFO
-src/tradingdash.egg-info/SOURCES.txt
-src/tradingdash.egg-info/dependency_links.txt
-src/tradingdash.egg-info/requires.txt
-src/tradingdash.egg-info/top_level.txt
 tests/__init__.py
 tests/test_query.py

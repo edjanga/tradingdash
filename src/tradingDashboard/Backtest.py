@@ -4,8 +4,6 @@ import concurrent.futures
 from src.tradingDashboard.data import Data
 import inspect
 from scipy.stats import skew,kurtosis
-import pdb
-#from empyrical import conditional_value_at_risk
 
 data_obj = Data()
 
