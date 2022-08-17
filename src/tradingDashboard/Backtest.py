@@ -82,12 +82,12 @@ class Performance:
     def rolling_maxdrawdown(df,rolling_period=12):
         return np.sqrt(rolling_period)*df.rolling(rolling_period).apply(Performance.maxdrawdown).dropna()
 
-    # @staticmethod
-    # def rolling_sharpe(df,rolling_period=12):
-    #     df_copy = Performance.returns_adjusted(df)
-    #     rolling_obj = df_copy.rolling(rolling_period)
-    #     df_copy = (rolling_obj.mean()).div(rolling_obj.std()).dropna()
-    #     return np.sqrt(rolling_period)*df_copy
+    @staticmethod
+    def rolling_sharpe(df,rolling_period=12):
+        df_copy = Performance.returns_adjusted(df)
+        rolling_obj = df_copy.rolling(rolling_period)
+        df_copy = (rolling_obj.mean()).div(rolling_obj.std()).dropna()
+        return np.sqrt(rolling_period)*df_copy
 
     @staticmethod
     def rolling_vol(df,rolling_period=12):

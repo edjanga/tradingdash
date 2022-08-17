@@ -31,10 +31,10 @@ class Data:
                 self.conn_obj = sql.connect(database=Path(f'{os.curdir}/etfs.db'),check_same_thread=False)
         except sql.OperationalError:
             self.conn_obj = sql.connect(database=Path('./src/tradingDashboard/etfs.db'), check_same_thread=False)
-        try:
-            self.tiingo_config_obj = TiingoConfig(Path(f'{os.curdir}/config_platform.json'))
-        except FileNotFoundError:
-            self.tiingo_config_obj = TiingoConfig(Path('./src/tradingDashboard/config_platform.json'))
+        # try:
+        #     self.tiingo_config_obj = TiingoConfig(Path(f'{os.curdir}/config_platform.json'))
+        # except FileNotFoundError:
+        #     self.tiingo_config_obj = TiingoConfig(Path('./src/tradingDashboard/config_platform.json'))
 
 
     def simulation(self,columns_ls=universe_ls,freq='M'):

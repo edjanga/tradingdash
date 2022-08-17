@@ -6,14 +6,14 @@ if __name__ == '__main__':
     with open("README.md", "r") as fh:
         long_description = fh.read()
 
-    setuptools.setup(name="tradingDashboard",\
+    setuptools.setup(name="tradingdash",\
           version="1.0.0",\
           author="Emmanuel Djanga",\
           author_email="emmanuel.djanga@live.be",\
           description="Data visualisation displaying trading strategies performance.",\
           long_description=long_description,\
           long_description_content_type="text/markdown",\
-          url="<https://github.com/edjanga/tradingDashboard>",\
+          url="https://github.com/edjanga/tradingdash",\
           packages=setuptools.find_packages(where='src',\
                                             include=['tradingDashboard*'],\
                                             exclude=['tradingDashboard*'],),\
