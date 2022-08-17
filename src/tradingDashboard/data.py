@@ -1,5 +1,4 @@
 import pandas as pd
-from src.tradingDashboard.config import TiingoConfig
 import concurrent.futures
 import requests
 from datetime import datetime
@@ -9,7 +8,9 @@ import sqlite3 as sql
 import numpy as np
 import os
 from pathlib import Path
+from dotenv import load_dotenv,find_dotenv
 
+load_dotenv(find_dotenv(Path('../.env')))
 
 class Data:
 
@@ -61,8 +62,8 @@ class Data:
             Data.log_obj.log_msg(msg)
             startDate = self.startDate
             endDate = self.endDate
-            query = f'daily/{sym.lower()}/prices?startDate={startDate}&token={api}&endDate={endDate}&resampleFreq={freq}'
-            url = ''.join((self.tiingo_config_obj.endpoint, query))
+            query = f'daily/{sym.lower()}/prices?startDate={startDate}&token={os.environ.get("TIINGO_API")}&endDate={endDate}&resampleFreq={freq}'
+            url = ''.join((os.environ.get('TIINGO_ENDPOINT'), query))
             r = requests.get(url, headers=self.tiingo_config_obj.headers)
             if r.status_code == 200:
                 try:

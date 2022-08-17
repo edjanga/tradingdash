@@ -1,7 +1,6 @@
 .DS_Store
 .idea
-src/Config/*.json
 venv
 src/DataStore/*.db
-src/*/log.txt
-*/__pycache__/*
+src/tradingDashboard/log.txt
+src/tradingDashboard/__pycache__/*
