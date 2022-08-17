@@ -1,21 +1,22 @@
 name: Create envfile
 
-on: [ push ]
+on:
+  - push
 
 jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.7']
 
-  create-envfile:
- 
-    runs-on: ubuntu-latest
- 
     steps:
-    - name: Make envfile
-      uses: actions/checkout@v2
-      with:
-        TIINGO_ENDPOINT: ${{secrets.TIINGO_ENDPOINT}}
-	    TIINGO_API: ${{ secrets.TIINGO_API }}
-        some_other_variable: foobar
-        directory: .
-        file_name: .env
-        fail_on_empty: false
-        run: echo -e "TIINGO_API=$TIINGO_API\TIINGO_ENDPOINT=$TIINGO_ENDPOINT" > $file_name
+    - name: Create envfile
+    - uses: actions/checkout@v2
+    - with:
+        export TIINGO_ENDPOINT: ${{secrets.TIINGO_ENDPOINT}}
+        export TIINGO_API: ${{ secrets.TIINGO_API }}
+        export envfile_name: .env
+        fail_on_empty: true
+      run: echo -e "TIINGO_API=$TIINGO_API\TIINGO_ENDPOINT=$TIINGO_ENDPOINT" > $file_name
