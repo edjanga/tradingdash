@@ -1,0 +1,12 @@
+.gitignore
+LICENSE
+README.md
+pyproject.toml
+requirements.txt
+setup.cfg
+setup.py
+src/tradingDashboard.egg-info/PKG-INFO
+src/tradingDashboard.egg-info/SOURCES.txt
+src/tradingDashboard.egg-info/dependency_links.txt
+src/tradingDashboard.egg-info/requires.txt
+src/tradingDashboard.egg-info/top_level.txt

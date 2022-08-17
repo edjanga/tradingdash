@@ -1,7 +1,7 @@
 .DS_Store
 .idea
-Config/*.json
+src/Config/*.json
 venv
-DataStore/*.db
-*/log.txt
+src/DataStore/*.db
+src/*/log.txt
 */__pycache__/*

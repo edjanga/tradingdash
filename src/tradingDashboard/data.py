@@ -1,11 +1,10 @@
 import pandas as pd
-from Config import TiingoConfig
+from src.tradingDashboard.config import TiingoConfig
 import concurrent.futures
 import requests
 from datetime import datetime
-import time
 from dateutil.relativedelta import relativedelta
-from Logger import Logs
+from src.tradingDashboard.logger import Logs
 import sqlite3 as sql
 import numpy as np
 import os
@@ -25,13 +24,16 @@ class Data:
         self.startDate = self.startDate.strftime(format='%Y-%m-%d')
         self.endDate = datetime.today().strftime(format='%Y-%m-%d')
         try:
-            self.conn_obj = sql.connect(database=Path(f'{os.curdir}/DataStore/etfs.db'),check_same_thread=False)
+            if 'etfs.db' not in os.listdir():
+                raise sql.OperationalError
+            else:
+                self.conn_obj = sql.connect(database=Path(f'{os.curdir}/etfs.db'),check_same_thread=False)
         except sql.OperationalError:
-            self.conn_obj = sql.connect(database=Path('../DataStore/etfs.db'),check_same_thread=False)
+            self.conn_obj = sql.connect(database=Path('./src/tradingDashboard/etfs.db'), check_same_thread=False)
         try:
-            self.tiingo_config_obj = TiingoConfig(Path(f'{os.curdir}/Config/config_platform.json'))
+            self.tiingo_config_obj = TiingoConfig(Path(f'{os.curdir}/config_platform.json'))
         except FileNotFoundError:
-            self.tiingo_config_obj = TiingoConfig(Path('../Config/config_platform.json'))
+            self.tiingo_config_obj = TiingoConfig(Path('./src/tradingDashboard/config_platform.json'))
 
 
     def simulation(self,columns_ls=universe_ls,freq='M'):
@@ -45,21 +47,6 @@ class Data:
         simulation_df = simulation_df.resample(freq).agg('last')
         return simulation_df
 
-    def wait_between_query(func):
-        def wrap(self):
-            """
-                Decorator aiming to avoid being maxed out between queries
-            """
-            try:
-                func(self)
-            except requests.ConnectionError:
-                msg = f'[FETCHING LIMIT]: {func.__name__} has reached its capacity. Waiting for 1 sec.'
-                self.logger_obj.log_msg(msg)
-                time.sleep(1)
-                func(self)
-        return wrap
-
-    @wait_between_query
     def insert_historical_data(self,freq='monthly'):
         universe_ls = Data.universe_ls
         historical_data_ls = []

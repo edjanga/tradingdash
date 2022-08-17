@@ -1,0 +1,24 @@
+Metadata-Version: 2.1
+Name: tradingDashboard
+Version: 1.0.0
+Summary: Data visualisation displaying trading strategies performance.
+Home-page: <https://github.com/edjanga/tradingDashboard>
+Author: Emmanuel Djanga
+Author-email: emmanuel.djanga@live.be
+License: MIT
+Platform: unix
+Platform: linux
+Platform: osx
+Platform: cygwin
+Platform: win32
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+Provides-Extra: testing
+License-File: LICENSE
+
+<h1>trading Dashboard</h1><br/>
+Repositary containing the source code of my web app.<br/>
+

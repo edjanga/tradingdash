@@ -1,17 +1,17 @@
 import pandas as pd
 import inspect
-from DataStore import Data
+from src.tradingDashboard.data import Data
 import concurrent.futures
-from Logger import Logs
+from src.tradingDashboard.logger import Logs
 import numpy as np
 from datetime import datetime
-from Backtest import Table
+from src.tradingDashboard.Backtest import Table
 from scipy.optimize import minimize
 from itertools import chain
 import pickle
 import os
 from pathlib import Path
-from Logger import Logs
+
 
 data_obj = Data()
 log_obj = Logs()

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import concurrent.futures
-from DataStore import Data
+from src.tradingDashboard.data import Data
 import inspect
 from scipy.stats import skew,kurtosis
 import pdb

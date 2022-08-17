@@ -1,0 +1,20 @@
+{
+  "Meta": "JSON file containing all information regarding API keys needed to use different APIs.",
+  "Platforms":[
+    {
+      "tiingo": [
+        {
+          "Meta": "Platform covering equity single names and cryptos",
+          "Communication": "REST API",
+          "API": "f0568c129cbe54850313c606422c9b43fe6d820a",
+          "Endpoint": "https://api.tiingo.com/tiingo/",
+          "headers": [
+            {
+					"Content-Type": "application/json"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

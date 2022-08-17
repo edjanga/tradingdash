@@ -1,10 +1,10 @@
 import plotly.graph_objects as go
 import plotly.express as px
-from DataStore import Data
+from src.tradingDashboard.data import Data
 from dash import Dash, Output, Input, dcc, html
 from plotly.subplots import make_subplots
-from Trading import BuyAndHold, TacticalAllocation, PortfolioStrategies
-from Backtest import Table
+from src.tradingDashboard.Strategies import BuyAndHold, TacticalAllocation, PortfolioStrategies
+from src.tradingDashboard.Backtest import Table
 import os
 import pickle
 import pandas as pd
