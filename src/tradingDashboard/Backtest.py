@@ -5,7 +5,7 @@ from src.tradingDashboard.data import Data
 import inspect
 from scipy.stats import skew,kurtosis
 import pdb
-from empyrical import conditional_value_at_risk
+#from empyrical import conditional_value_at_risk
 
 data_obj = Data()
 
@@ -52,7 +52,7 @@ class Performance:
 
     @staticmethod
     def cvar(df):
-        cvar_ls = list(map(lambda x:conditional_value_at_risk(x),df.transpose().values))
+        cvar_ls = list(map(lambda x: x[x<=np.quantile(x,.05)].mean(), df.transpose().values))
         return pd.DataFrame(cvar_ls,index=df.columns)
 
     @staticmethod
@@ -82,12 +82,12 @@ class Performance:
     def rolling_maxdrawdown(df,rolling_period=12):
         return np.sqrt(rolling_period)*df.rolling(rolling_period).apply(Performance.maxdrawdown).dropna()
 
-    @staticmethod
-    def rolling_sharpe(df,rolling_period=12):
-        df_copy = Performance.returns_adjusted(df)
-        rolling_obj = df_copy.rolling(rolling_period)
-        df_copy = (rolling_obj.mean()).div(rolling_obj.std()).dropna()
-        return np.sqrt(rolling_period)*df_copy
+    # @staticmethod
+    # def rolling_sharpe(df,rolling_period=12):
+    #     df_copy = Performance.returns_adjusted(df)
+    #     rolling_obj = df_copy.rolling(rolling_period)
+    #     df_copy = (rolling_obj.mean()).div(rolling_obj.std()).dropna()
+    #     return np.sqrt(rolling_period)*df_copy
 
     @staticmethod
     def rolling_vol(df,rolling_period=12):
@@ -143,6 +143,5 @@ if __name__ == '__main__':
     perf_obj.rolling_sharpe(df)
     table_obj = Table(df)
     table_obj.returns(df)
-    pdb.set_trace()
     aggregate_perf_df = table_obj.table_aggregate()
     print(aggregate_perf_df.head())
