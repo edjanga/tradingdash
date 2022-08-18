@@ -12,6 +12,7 @@ from pathlib import Path
 import asyncio
 import concurrent.futures
 import time
+import pdb
 
 
 data_obj = Data()
@@ -76,7 +77,8 @@ app.layout = html.Div([html.H1('Asset Allocation Baskets - Dashboard',style={'te
 def aggregate_layout(allocation):
     content_ls = []
     query = data_obj.write_query_equity_curves(allocation=allocation)
-    equity_curves_aggregate_df = data_obj.query(query=query, melt=True,set_index=True).rename(index={'index': 'time'})
+    equity_curves_aggregate_df = data_obj.query(query=query, melt=True,set_index=True)#.rename(index={'index': 'time'})
+    equity_curves_aggregate_df.index.name = 'time'
     equity_curves_fig = px.line(data_frame=equity_curves_aggregate_df,y='equity_curve', color='strategy',\
                                 title='Equity curves',labels={'equity_curves':'value'})
     equity_curves_fig.add_hline(y=1)
@@ -85,6 +87,7 @@ def aggregate_layout(allocation):
     query = data_obj.write_query_returns(allocation=allocation)
     strategy_returns_aggregate_df = data_obj.query(query=query,\
                                                    melt=True).rename(columns={'equity_curve':'returns'}).set_index('index')
+
     strategy_returns_aggregate_df = strategy_returns_aggregate_df.rename(columns={'index':'time'})
     strategy_returns_aggregate_df.index.name = None
     distribution_returns_fig = px.histogram(data_frame=strategy_returns_aggregate_df,\
