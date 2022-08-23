@@ -9,6 +9,7 @@ import numpy as np
 import os
 from pathlib import Path
 from dotenv import load_dotenv,find_dotenv
+import pdb
 
 load_dotenv(find_dotenv(Path('../.env')))
 
@@ -44,11 +45,11 @@ class Data:
         simulation_df = simulation_df.resample(freq).agg('last')
         return simulation_df
 
-    def insert_historical_data(self,freq='monthly'):
+    def insert_historical_data(self,freq='daily'):
         universe_ls = Data.universe_ls
         historical_data_ls = []
 
-        def query(sym,api,freq):
+        def query(sym,freq):
             """
             :param sym: Ticker to be queried
             :param api: Tiingo API
@@ -60,7 +61,7 @@ class Data:
             endDate = self.endDate
             query = f'daily/{sym.lower()}/prices?startDate={startDate}&token={os.environ.get("TIINGO_API")}&endDate={endDate}&resampleFreq={freq}'
             url = ''.join((os.environ.get('TIINGO_ENDPOINT'), query))
-            r = requests.get(url, headers=self.tiingo_config_obj.headers)
+            r = requests.get(url, headers={"Content-Type": "application/json"})
             if r.status_code == 200:
                 try:
                     data_dd = r.json()
@@ -77,7 +78,7 @@ class Data:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             results = []
             for sym in universe_ls:
-                results.append(executor.submit(query, sym, self.tiingo_config_obj.api, freq))
+                results.append(executor.submit(query, sym, freq))
             for f in concurrent.futures.as_completed(results):
                 try:
                     msg = f'[FETCHING]: {f.result().upper()} price data has been retrieved @ {Data.log_obj.now_date()}.\n'
@@ -87,8 +88,6 @@ class Data:
         historical_data_df = pd.DataFrame(historical_data_ls).transpose().sort_index().dropna(how='all', axis=0)
         historical_data_df.index = [date.replace('T',' ').replace('Z','') for date in historical_data_df.index]
         historical_data_df.index = pd.to_datetime(historical_data_df.index)
-        first_valid_date_for_all = historical_data_df.apply(lambda x:pd.Series.first_valid_index(x)).sort_values()
-        historical_data_df = historical_data_df.loc[first_valid_date_for_all[-1]:,:]
         historical_data_df.to_sql(con=self.conn_obj,name='price',if_exists='replace')
         msg = f'[INSERTION]: ETF prices data ahas been inserted into the database @ {Data.log_obj.now_date()}.\n'
         Data.log_obj.log_msg(msg)

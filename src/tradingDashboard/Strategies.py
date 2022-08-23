@@ -885,11 +885,11 @@ class PortfolioStrategies:
 
     @staticmethod
     def to_pickle(dd,object):
-        path = os.path.abspath(path=Path('./DataStore'))
+        path = os.path.abspath(path=Path('./tradingDashboard'))
         try:
             pickle_out = open(f'{path}/{type(object).__name__}.pickle','wb')
         except FileNotFoundError:
-            path = os.path.abspath(path=Path('../DataStore'))
+            path = os.path.abspath(path=Path('../tradingDashboard'))
             pickle_out = open(f'{path}/{type(object).__name__}.pickle', 'wb')
         pickle.dump(dd,pickle_out)
         pickle_out.close()
