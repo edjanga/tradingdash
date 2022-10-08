@@ -1,0 +1,15 @@
+.DS_Store
+.idea
+venv
+src/tradingDashboard/log.txt
+src/tradingDashboard/__pycache__/*
+tests/__pycache__/*
+src/tradingDashboard/config.py
+src/tradingDashboard/config_platform.json
+src/tradingDashboard/Backtest.py
+src/tradingDashboard/app2.py
+__pycache__/
+.env
+test.py
+test*.py
+

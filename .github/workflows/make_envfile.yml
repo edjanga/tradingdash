@@ -1,0 +1,15 @@
+name: create_env
+
+on:
+    - push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: create_env
+        env:
+          TIINGO_API: ${{ secrets.TIINGO_API }}
+          TIINGO_ENDPOINT: ${{ secrets.TIINGO_ENDPOINT }}
+        run: echo -e "TIINGO_API=$TIINGO_API\nTIINGO_ENDPOINT=$TIINGO_ENDPOINT" > .env

@@ -1,0 +1,73 @@
+[FETCHING]: SHY price data started @ 2022-10-07 19:37:20.845254.
+[FETCHING]: VTI price data started @ 2022-10-07 19:37:20.845800.
+[FETCHING]: TLT price data started @ 2022-10-07 19:37:20.845570.
+[FETCHING]: GLD price data started @ 2022-10-07 19:37:20.846802.
+[FETCHING]: BNDX price data started @ 2022-10-07 19:37:20.847381.
+[FETCHING]: IWN price data started @ 2022-10-07 19:37:20.846395.
+[FETCHING]: LQD price data started @ 2022-10-07 19:37:20.847836.
+[FETCHING]: VEU price data started @ 2022-10-07 19:37:20.849776.
+[FETCHING]: SPY price data started @ 2022-10-07 19:37:20.851687.
+[FETCHING]: VNQ price data started @ 2022-10-07 19:37:20.850391.
+[FETCHING]: EFA price data started @ 2022-10-07 19:37:20.855463.
+[FETCHING]: DBC price data started @ 2022-10-07 19:37:20.853959.
+[FETCHING]: BIL price data started @ 2022-10-07 19:37:20.858068.
+[FETCHING]: TIP price data started @ 2022-10-07 19:37:20.852574.
+[FETCHING]: EEM price data started @ 2022-10-07 19:37:20.856097.
+[FETCHING]: AGG price data started @ 2022-10-07 19:37:20.862270.
+[FETCHING]: DLS price data started @ 2022-10-07 19:37:20.859778.
+[FETCHING]: IWD price data started @ 2022-10-07 19:37:20.865112.
+[FETCHING]: IEF price data started @ 2022-10-07 19:37:20.859156.
+[FETCHING]: IWM price data started @ 2022-10-07 19:37:20.866794.
+[FETCHING]: EFV price data started @ 2022-10-07 19:37:24.458864.
+[FETCHING]: EEM price data has been retrieved @ 2022-10-07 19:37:24.459012.
+[FETCHING]: SCZ price data started @ 2022-10-07 19:37:26.187820.
+[FETCHING]: EFV price data has been retrieved @ 2022-10-07 19:37:26.188215.
+[FETCHING]: HYG price data started @ 2022-10-07 19:37:26.380376.
+[FETCHING]: BIL price data has been retrieved @ 2022-10-07 19:37:26.380822.
+[FETCHING]: NEAR price data started @ 2022-10-07 19:37:26.433542.
+[FETCHING]: BNDX price data has been retrieved @ 2022-10-07 19:37:26.433636.
+[FETCHING]: QQQ price data started @ 2022-10-07 19:37:27.714229.
+[FETCHING]: EFA price data has been retrieved @ 2022-10-07 19:37:27.714518.
+[FETCHING]: SHY price data has been retrieved @ 2022-10-07 19:37:28.166139.
+[FETCHING]: MTUM price data started @ 2022-10-07 19:37:28.166048.
+[FETCHING]: IWB price data started @ 2022-10-07 19:37:28.464182.
+[FETCHING]: IEFA price data started @ 2022-10-07 19:37:28.469718.
+[FETCHING]: NEAR price data has been retrieved @ 2022-10-07 19:37:28.466302.
+[FETCHING]: DBC price data has been retrieved @ 2022-10-07 19:37:28.475515.
+[FETCHING]: DWAS price data started @ 2022-10-07 19:37:28.544388.
+[FETCHING]: SCZ price data has been retrieved @ 2022-10-07 19:37:28.545128.
+[FETCHING]: BWX price data started @ 2022-10-07 19:37:28.662939.
+[FETCHING]: HYG price data has been retrieved @ 2022-10-07 19:37:28.663105.
+[FETCHING]: VGK price data started @ 2022-10-07 19:37:29.438802.
+[FETCHING]: DLS price data has been retrieved @ 2022-10-07 19:37:29.438912.
+[FETCHING]: VNQ price data has been retrieved @ 2022-10-07 19:37:30.088158.
+[FETCHING]: EWJ price data started @ 2022-10-07 19:37:30.088061.
+[FETCHING]: GLD price data has been retrieved @ 2022-10-07 19:37:30.539709.
+[FETCHING]: REM price data started @ 2022-10-07 19:37:30.539602.
+[FETCHING]: MTUM price data has been retrieved @ 2022-10-07 19:37:30.620138.
+[FETCHING]: RWX price data started @ 2022-10-07 19:37:30.620053.
+[FETCHING]: IEFA price data has been retrieved @ 2022-10-07 19:37:30.757458.
+[FETCHING]: UVIX price data started @ 2022-10-07 19:37:30.757357.
+[FETCHING]: VEU price data has been retrieved @ 2022-10-07 19:37:30.825041.
+[FETCHING]: SVIX price data started @ 2022-10-07 19:37:30.824944.
+[FETCHING]: DWAS price data has been retrieved @ 2022-10-07 19:37:30.946761.
+[FETCHING]: BWX price data has been retrieved @ 2022-10-07 19:37:31.215570.
+[FETCHING]: TIP price data has been retrieved @ 2022-10-07 19:37:31.441654.
+[FETCHING]: AGG price data has been retrieved @ 2022-10-07 19:37:31.513930.
+[FETCHING]: SVIX price data has been retrieved @ 2022-10-07 19:37:31.595882.
+[FETCHING]: UVIX price data has been retrieved @ 2022-10-07 19:37:31.611258.
+[FETCHING]: VGK price data has been retrieved @ 2022-10-07 19:37:32.127838.
+[FETCHING]: QQQ price data has been retrieved @ 2022-10-07 19:37:32.406944.
+[FETCHING]: EWJ price data has been retrieved @ 2022-10-07 19:37:32.897072.
+[FETCHING]: IWN price data has been retrieved @ 2022-10-07 19:37:32.990222.
+[FETCHING]: REM price data has been retrieved @ 2022-10-07 19:37:32.993161.
+[FETCHING]: TLT price data has been retrieved @ 2022-10-07 19:37:33.005762.
+[FETCHING]: RWX price data has been retrieved @ 2022-10-07 19:37:33.006427.
+[FETCHING]: SPY price data has been retrieved @ 2022-10-07 19:37:33.114751.
+[FETCHING]: LQD price data has been retrieved @ 2022-10-07 19:37:33.245824.
+[FETCHING]: VTI price data has been retrieved @ 2022-10-07 19:37:33.254086.
+[FETCHING]: IEF price data has been retrieved @ 2022-10-07 19:37:33.520204.
+[FETCHING]: IWM price data has been retrieved @ 2022-10-07 19:37:33.520872.
+[FETCHING]: IWD price data has been retrieved @ 2022-10-07 19:37:33.857923.
+[FETCHING]: IWB price data has been retrieved @ 2022-10-07 19:37:34.423451.
+[INSERTION]: ETF prices data ahas been inserted into the database @ 2022-10-07 19:37:35.093434.
