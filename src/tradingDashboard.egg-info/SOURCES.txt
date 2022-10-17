@@ -3,6 +3,8 @@ LICENSE
 Procfile
 README.md
 app.py
+app2.py
+log.txt
 pyproject.toml
 requirements.txt
 requirements_dev.txt
@@ -13,9 +15,12 @@ tox.ini
 .github/workflows/tests.yml
 .tox/.package.lock
 dist/tradingDashboard-1.0.0-py3.7.egg
-src/tradingDashboard/Backtest.py
+src/__init__.py
 src/tradingDashboard/BuyAndHold.pickle
+src/tradingDashboard/CrossAllocation.pickle
 src/tradingDashboard/Strategies.py
+src/tradingDashboard/Strategies3.py
+src/tradingDashboard/StrategiesBase.py
 src/tradingDashboard/TacticalAllocation.pickle
 src/tradingDashboard/__init__.py
 src/tradingDashboard/data.py
@@ -28,4 +33,3 @@ src/tradingDashboard.egg-info/dependency_links.txt
 src/tradingDashboard.egg-info/requires.txt
 src/tradingDashboard.egg-info/top_level.txt
 tests/__init__.py
-tests/test_query.py

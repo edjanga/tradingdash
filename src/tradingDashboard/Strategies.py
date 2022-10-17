@@ -12,7 +12,7 @@ from src.tradingDashboard.StrategiesBase import ci
 import datetime
 import numpy as np
 import pdb
-import vectorbt as vbt
+#import vectorbt as vbt
 from scipy.optimize import minimize
 """
     Buy and Hold strategies

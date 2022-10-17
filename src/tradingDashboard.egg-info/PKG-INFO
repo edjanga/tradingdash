@@ -6,8 +6,6 @@ Home-page: https://github.com/edjanga/tradingdash
 Author: Emmanuel Djanga
 Author-email: emmanuel.djanga@live.be
 License: MIT
-Platform: unix
-Platform: linux
 Platform: osx
 Platform: cygwin
 Platform: win32
