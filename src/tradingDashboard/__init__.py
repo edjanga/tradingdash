@@ -2,7 +2,6 @@
 #from src.tradingDashboard.config import TiingoConfig
 from src.tradingDashboard.data import Data
 from src.tradingDashboard.logger import Logs
-from src.tradingDashboard.Strategies3 import BuyAndHold,TacticalAllocation,PortfolioStrategies
 from src.tradingDashboard.Strategies import GoldenButterflyStrategy
 from src.tradingDashboard.Strategies import RobArmottStrategy
 from src.tradingDashboard.Strategies import GlobalAssetAllocationStrategy
