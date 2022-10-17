@@ -7,7 +7,7 @@ tests/__pycache__/*
 src/tradingDashboard/config.py
 src/tradingDashboard/config_platform.json
 src/tradingDashboard/Backtest.py
-src/tradingDashboard/app2.py
+src/app2.py
 src/tradingDashboard/Strategies3.py
 __pycache__/
 .env
