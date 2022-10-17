@@ -698,19 +698,20 @@ class AdaptiveAssetAllocationStrategy(TacticalAssetAllocation):
 
 
 if __name__ == '__main__':
-    data_obj = Data()
-    query = data_obj.write_query_price()
-    df = data_obj.query(query,set_index=True)
-    strategy_obj = KipnisDefensiveAdaptiveAssetAllocation()
-    signals = strategy_obj.rule(df)
-    entries = signals > 0
-    size = signals
-    pf = vbt.Portfolio.from_signals(close=df.loc[:,strategy_obj.instruments],
-                                    entries=entries,
-                                    size=size,
-                                    size_type='Percent',
-                                    group_by=True,
-                                    init_cash=10000,
-                                    cash_sharing=True,
-                                    freq='d')
-    pdb.set_trace()
+    pass
+    # data_obj = Data()
+    # query = data_obj.write_query_price()
+    # df = data_obj.query(query,set_index=True)
+    # strategy_obj = KipnisDefensiveAdaptiveAssetAllocation()
+    # signals = strategy_obj.rule(df)
+    # entries = signals > 0
+    # size = signals
+    # pf = vbt.Portfolio.from_signals(close=df.loc[:,strategy_obj.instruments],
+    #                                 entries=entries,
+    #                                 size=size,
+    #                                 size_type='Percent',
+    #                                 group_by=True,
+    #                                 init_cash=10000,
+    #                                 cash_sharing=True,
+    #                                 freq='d')
+    # pdb.set_trace()
